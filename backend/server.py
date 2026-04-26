@@ -38,22 +38,27 @@ class GenerateResponse(BaseModel):
 @app.post("/api/generate", response_model=GenerateResponse)
 async def generate(req: GenerateRequest):
     model = req.model_name or ""
+    # Fallback to Server Environment Variables if the UI didn't provide an API key
+    api_key = req.api_key.strip()
+    if not api_key:
+        api_key = os.getenv(f"{req.provider.upper()}_API_KEY", "")
+
     if req.provider == "ollama":
         result = generate_tests_ollama(req.message, temperature=req.temperature)
     elif req.provider == "gemini":
-        result = generate_tests_gemini(req.message, req.api_key, model_name=model or "gemini-2.5-flash-lite", temperature=req.temperature)
+        result = generate_tests_gemini(req.message, api_key, model_name=model or "gemini-2.5-flash-lite", temperature=req.temperature)
     elif req.provider == "openai":
-        result = generate_tests_openai(req.message, req.api_key, model_name=model or "gpt-4o", temperature=req.temperature, image_data=req.image_data)
+        result = generate_tests_openai(req.message, api_key, model_name=model or "gpt-4o", temperature=req.temperature, image_data=req.image_data)
     elif req.provider == "claude":
-        result = generate_tests_claude(req.message, req.api_key, model_name=model or "claude-sonnet-4-20250514", temperature=req.temperature)
+        result = generate_tests_claude(req.message, api_key, model_name=model or "claude-sonnet-4-20250514", temperature=req.temperature)
     elif req.provider == "deepseek":
-        result = generate_tests_deepseek(req.message, req.api_key, model_name=model or "deepseek-chat", temperature=req.temperature)
+        result = generate_tests_deepseek(req.message, api_key, model_name=model or "deepseek-chat", temperature=req.temperature)
     elif req.provider == "mistral":
-        result = generate_tests_mistral(req.message, req.api_key, model_name=model or "mistral-large-latest", temperature=req.temperature)
+        result = generate_tests_mistral(req.message, api_key, model_name=model or "mistral-large-latest", temperature=req.temperature)
     elif req.provider == "kimi":
-        result = generate_tests_kimi(req.message, req.api_key, temperature=req.temperature)
+        result = generate_tests_kimi(req.message, api_key, temperature=req.temperature)
     elif req.provider == "groq":
-        result = generate_tests_groq(req.message, req.api_key, model_name=model or "llama-3.3-70b-versatile", temperature=req.temperature)
+        result = generate_tests_groq(req.message, api_key, model_name=model or "llama-3.3-70b-versatile", temperature=req.temperature)
     else:
         result = f"Unknown provider: {req.provider}"
     
@@ -70,7 +75,10 @@ class GenerateImageRequest(BaseModel):
 @app.post("/api/generate_image", response_model=GenerateResponse)
 async def generate_image(req: GenerateImageRequest):
     from logic import generate_image_openai
-    result = generate_image_openai(req.prompt, req.api_key)
+    api_key = req.api_key.strip()
+    if not api_key:
+        api_key = os.getenv("OPENAI_API_KEY", "")
+    result = generate_image_openai(req.prompt, api_key)
     return GenerateResponse(response=result)
 
 # --- Atlassian Integration ---
