@@ -1,8 +1,7 @@
 import { useState, useRef } from 'react'
 
-function ChatInput({ onSend, isLoading, onStop }) {
+function ChatInput({ onSend, isLoading, onStop, action, setAction }) {
     const [text, setText] = useState('')
-    const [action, setAction] = useState('text')
     const [imagePreview, setImagePreview] = useState(null)
     const textareaRef = useRef(null)
     const fileInputRef = useRef(null)
@@ -49,10 +48,19 @@ function ChatInput({ onSend, isLoading, onStop }) {
 
     const charCount = text.length
 
+    const ACTION_LABELS = {
+        text: '💬 Text / Code',
+        locator_gen: '🔍 DOM Locator Gen',
+        web_search: '🌐 Web Search',
+        image: '🎨 Generate Image',
+        jira: '🔵 Query Jira',
+        rovo: '🤖 Ask Rovo',
+    }
+
     return (
         <form className="chat-input-container" onSubmit={handleSubmit} style={{ position: 'relative' }}>
             <div className="input-hint">
-                <span>Press <kbd>Enter</kbd> to send, <kbd>Shift+Enter</kbd> for new line. <span style={{color: 'var(--primary-400)'}}>✨ New: Upload a screenshot for Visual QA!</span></span>
+                <span>Press <kbd>Enter</kbd> to send, <kbd>Shift+Enter</kbd> for new line.</span>
                 {charCount > 0 && <span className="char-count">{charCount.toLocaleString()} chars</span>}
             </div>
 
@@ -87,7 +95,7 @@ function ChatInput({ onSend, isLoading, onStop }) {
                     </button>
 
                     <select
-                        style={{ background: 'transparent', border: 'none', color: 'var(--text-1)', fontSize: '0.8rem', padding: '0.3rem', cursor: 'pointer', outline: 'none' }}
+                        className="action-dropdown"
                         value={action}
                         onChange={(e) => setAction(e.target.value)}
                         disabled={isLoading}

@@ -16,6 +16,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [backendStatus, setBackendStatus] = useState('checking')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [chatAction, setChatAction] = useState('text')
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const [atlassianConfig, setAtlassianConfig] = useState(() => {
     try {
@@ -233,6 +234,8 @@ function App() {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         theme={theme}
         setTheme={setTheme}
+        chatAction={chatAction}
+        setChatAction={setChatAction}
         atlassianConfig={atlassianConfig}
         setAtlassianConfig={setAtlassianConfig}
       />
@@ -277,7 +280,7 @@ function App() {
         </header>
         <div className="header-divider"></div>
         <ChatWindow messages={messages} isLoading={isLoading} onSend={handleSend} />
-        <ChatInput onSend={handleSend} isLoading={isLoading} onStop={handleStop} />
+        <ChatInput onSend={handleSend} isLoading={isLoading} onStop={handleStop} action={chatAction} setAction={setChatAction} />
       </main>
     </div>
   )

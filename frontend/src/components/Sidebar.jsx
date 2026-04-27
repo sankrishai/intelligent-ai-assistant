@@ -3,13 +3,13 @@ import { GeminiIcon, OpenAIIcon, ClaudeIcon, DeepSeekIcon, MistralIcon, KimiIcon
 import AiBrainIcon from './AiBrainIcon'
 
 const PROVIDERS = [
-    { id: 'gemini', label: 'Google Gemini', badge: 'Cloud', icon: GeminiIcon },
-    { id: 'openai', label: 'OpenAI', badge: 'Cloud', icon: OpenAIIcon },
-    { id: 'claude', label: 'Anthropic Claude', badge: 'Cloud', icon: ClaudeIcon },
-    { id: 'deepseek', label: 'DeepSeek', badge: 'Cloud', icon: DeepSeekIcon },
-    { id: 'mistral', label: 'Mistral AI', badge: 'Cloud', icon: MistralIcon },
-    { id: 'kimi', label: 'KimiCode', badge: 'Cloud', icon: KimiIcon },
-    { id: 'groq', label: 'Groq', badge: 'Cloud', icon: GroqIcon },
+    { id: 'gemini', label: 'Google Gemini', icon: GeminiIcon },
+    { id: 'openai', label: 'OpenAI', icon: OpenAIIcon },
+    { id: 'claude', label: 'Anthropic Claude', icon: ClaudeIcon },
+    { id: 'deepseek', label: 'DeepSeek', icon: DeepSeekIcon },
+    { id: 'mistral', label: 'Mistral AI', icon: MistralIcon },
+    { id: 'kimi', label: 'KimiCode', icon: KimiIcon },
+    { id: 'groq', label: 'Groq', icon: GroqIcon },
 ]
 
 const PROVIDER_MODELS = {
@@ -74,14 +74,22 @@ const API_KEY_LABELS = {
     groq: { label: 'Groq API Key', hint: 'Get from console.groq.com' },
 }
 
-function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, atlassianConfig, setAtlassianConfig }) {
-    const [showAtlassian, setShowAtlassian] = useState(false)
+const CAPABILITIES = [
+    { id: 'text', label: 'Text / Code Gen', icon: '💬', description: 'Generate tests, review code' },
+    { id: 'locator_gen', label: 'DOM Locator Gen', icon: '🔍', description: 'POM & native locators' },
+    { id: 'web_search', label: 'Web Search', icon: '🌐', description: 'Live web results' },
+    { id: 'image', label: 'Image Generation', icon: '🎨', description: 'DALL-E 3 images' },
+    { id: 'jira', label: 'Query Jira', icon: '🔵', description: 'Fetch Jira tickets' },
+    { id: 'rovo', label: 'Rovo (JQL Search)', icon: '🤖', description: 'Search Jira via JQL' },
+]
+
+function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, chatAction, setChatAction, atlassianConfig, setAtlassianConfig }) {
+    const [showIntegrations, setShowIntegrations] = useState(false)
     const [showApiKey, setShowApiKey] = useState(false)
 
     const activeProvider = PROVIDERS.find(p => p.id === provider)
     const models = PROVIDER_MODELS[provider] || []
     const apiKeyInfo = API_KEY_LABELS[provider]
-    const needsApiKey = true
     const ActiveIcon = activeProvider?.icon
 
     const handleModelChange = (e) => {
@@ -92,11 +100,19 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
 
     return (
         <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
+            {/* ── Brand Header with inline status ── */}
             <div className="sidebar-brand">
                 <span className="brand-icon"><AiBrainIcon size={28} /></span>
                 <div>
-                    <div className="brand-name">Intelligent QA AI Assistant</div>
-                    <div className="brand-version">v2.0 — React Edition</div>
+                    <div className="brand-name">QA Automation Architect</div>
+                    <div className="brand-version">
+                        v2.1
+                        <span className="brand-status-separator">•</span>
+                        <span className={`brand-status-dot ${backendStatus}`}></span>
+                        <span className={`brand-status-text ${backendStatus}`}>
+                            {backendStatus === 'connected' ? 'Online' : backendStatus === 'checking' ? 'Checking' : 'Offline'}
+                        </span>
+                    </div>
                 </div>
                 <button
                     className="theme-toggle"
@@ -108,22 +124,16 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
             </div>
 
             <div className="sidebar-scroll">
-                {/* Connection Status */}
-                <div className="sidebar-section">
-                    <div className={`connection-card ${backendStatus}`}>
-                        <div className={`conn-dot ${backendStatus}`}></div>
-                        <div className="conn-info">
-                            <span className="conn-label">Backend API</span>
-                            <span className="conn-status">
-                                {backendStatus === 'connected' ? 'Connected' : backendStatus === 'checking' ? 'Checking...' : 'Disconnected'}
-                            </span>
-                        </div>
-                    </div>
+                {/* ── CONFIGURATION ── */}
+                <div className="sidebar-section-header">
+                    <span className="section-header-line"></span>
+                    <span className="section-header-text">Configuration</span>
+                    <span className="section-header-line"></span>
                 </div>
 
-                {/* Provider Selection - Dropdown */}
+                {/* Provider */}
                 <div className="sidebar-section">
-                    <label className="section-label">AI Provider</label>
+                    <label className="section-label">Provider</label>
                     <div className="provider-dropdown-wrapper">
                         {ActiveIcon && (
                             <span className="provider-dropdown-icon">
@@ -137,7 +147,6 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                                 const newProvider = e.target.value
                                 setProvider(newProvider)
                                 setApiKey('')
-                                // Auto-select the first available model for the new provider
                                 const newModels = PROVIDER_MODELS[newProvider] || []
                                 if (newModels.length > 0) {
                                     setGeminiModel(newModels[0].id)
@@ -150,16 +159,13 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                                 </option>
                             ))}
                         </select>
-                        <span className="provider-type-badge badge-cloud">
-                            Cloud
-                        </span>
                     </div>
                 </div>
 
-                {/* Model Selection */}
+                {/* Model */}
                 {models.length > 0 && (
                     <div className="sidebar-section">
-                        <label className="section-label">🧠 Model</label>
+                        <label className="section-label">Model</label>
                         <select
                             className="model-select"
                             value={currentModel}
@@ -169,18 +175,11 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                                 <option key={m.id} value={m.id}>{m.label}</option>
                             ))}
                         </select>
-                        <div className="model-card">
-                            <div className="model-card-header">
-                                <span className="model-card-icon">⚡</span>
-                                <span className="model-card-title">Active Model</span>
-                            </div>
-                            <div className="model-card-value">{currentModel}</div>
-                        </div>
                     </div>
                 )}
 
                 {/* API Key */}
-                {needsApiKey && apiKeyInfo && (
+                {apiKeyInfo && (
                     <div className="sidebar-section">
                         <label className="section-label">🔑 {apiKeyInfo.label}</label>
                         <div className="input-wrapper">
@@ -207,11 +206,12 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                     </div>
                 )}
 
-
-                {/* Temperature */}
+                {/* Temperature — Compact Inline */}
                 <div className="sidebar-section">
-                    <label className="section-label">🌡️ Temperature</label>
-                    <div className="temp-display">{temperature.toFixed(1)}</div>
+                    <div className="temp-inline">
+                        <label className="section-label" style={{ marginBottom: 0 }}>🌡️ Temperature</label>
+                        <span className="temp-value">{temperature.toFixed(1)}</span>
+                    </div>
                     <input
                         type="range"
                         className="temp-slider"
@@ -227,20 +227,53 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                     </div>
                 </div>
 
-                <div className="sidebar-divider"></div>
+                {/* ── CAPABILITIES ── */}
+                <div className="sidebar-section-header">
+                    <span className="section-header-line"></span>
+                    <span className="section-header-text">Capabilities</span>
+                    <span className="section-header-line"></span>
+                </div>
 
-                {/* Atlassian Support */}
+                <div className="capabilities-list">
+                    {CAPABILITIES.map(cap => (
+                        <button
+                            key={cap.id}
+                            className={`capability-pill ${chatAction === cap.id ? 'active' : ''}`}
+                            onClick={() => setChatAction(cap.id)}
+                            title={cap.description}
+                        >
+                            <span className="cap-icon">{cap.icon}</span>
+                            <div className="cap-content">
+                                <span className="cap-label">{cap.label}</span>
+                                <span className="cap-desc">{cap.description}</span>
+                            </div>
+                            {chatAction === cap.id && <span className="cap-active-dot"></span>}
+                        </button>
+                    ))}
+                </div>
+
+                {/* ── INTEGRATIONS ── */}
+                <div className="sidebar-section-header">
+                    <span className="section-header-line"></span>
+                    <span className="section-header-text">Integrations</span>
+                    <span className="section-header-line"></span>
+                </div>
+
                 <div className="sidebar-section">
                     <div
-                        className="section-label"
-                        style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer', paddingRight: '5px' }}
-                        onClick={() => setShowAtlassian(!showAtlassian)}
+                        className="integration-toggle"
+                        onClick={() => setShowIntegrations(!showIntegrations)}
                     >
-                        <span>Atlassian Integration</span>
-                        <span>{showAtlassian ? '▼' : '▶'}</span>
+                        <span className="integration-toggle-icon">🔗</span>
+                        <span className="integration-toggle-label">Jira / Rovo Setup</span>
+                        <span className={`integration-chevron ${showIntegrations ? 'open' : ''}`}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </span>
                     </div>
-                    {showAtlassian && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.3rem' }}>
+                    {showIntegrations && (
+                        <div className="integration-fields">
                             <div className="input-wrapper">
                                 <input
                                     type="text"
@@ -268,30 +301,9 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                                     onChange={(e) => setAtlassianConfig({ ...atlassianConfig, token: e.target.value })}
                                 />
                             </div>
-                            <span className="help-text">Type <strong>/jira PROJ-123</strong>, <strong>/confluence 12345</strong>, or <strong>/rovo &lt;JQL&gt;</strong> in chat to import.</span>
+                            <span className="help-text">Select <strong>Query Jira</strong> or <strong>Rovo</strong> from Capabilities above to use.</span>
                         </div>
                     )}
-                </div>
-
-                <div className="sidebar-divider"></div>
-
-                {/* Quick Guide */}
-                <div className="sidebar-section">
-                    <label className="section-label">Quick Guide</label>
-                    <div className="guide-cards">
-                        <div className="guide-card">
-                            <span className="guide-icon">📝</span>
-                            <span>Paste code to generate tests</span>
-                        </div>
-                        <div className="guide-card">
-                            <span className="guide-icon">🔍</span>
-                            <span>Ask for code reviews</span>
-                        </div>
-                        <div className="guide-card">
-                            <span className="guide-icon">🐛</span>
-                            <span>Debug errors & logs</span>
-                        </div>
-                    </div>
                 </div>
 
                 <div className="sidebar-divider"></div>

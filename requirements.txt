@@ -1,6 +1,5 @@
 fastapi
 uvicorn[standard]
-ollama
 google-generativeai
 openai
 httpx
