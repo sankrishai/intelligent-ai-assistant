@@ -93,11 +93,11 @@ function ChatInput({ onSend, isLoading, onStop }) {
                         disabled={isLoading}
                     >
                         <option value="text">💬 Text / Code</option>
+                        <option value="locator_gen">🔍 DOM Locator Gen</option>
                         <option value="web_search">🌐 Web Search</option>
                         <option value="image">🎨 Generate Image</option>
                         <option value="jira">🔵 Query Jira</option>
                         <option value="rovo">🤖 Ask Rovo (Jira Search)</option>
-                        <option value="confluence">📘 Query Confluence</option>
                     </select>
                 </div>
                 <textarea
@@ -108,10 +108,10 @@ function ChatInput({ onSend, isLoading, onStop }) {
                     onKeyDown={handleKeyDown}
                     placeholder={
                         action === 'web_search' ? "Search the live web (e.g. Latest playwright features)..." :
-                            action === 'image' ? "Describe the image to generate..." :
-                                action === 'jira' ? "Enter Jira Ticket ID (e.g. PROJ-123)..." :
-                                    action === 'rovo' ? "Enter JQL Query (e.g. project=PROJ AND status='To Do')..." :
-                                        action === 'confluence' ? "Enter Confluence Page ID..." :
+                            action === 'locator_gen' ? "Paste a URL or DOM snippet to generate Locators..." :
+                                action === 'image' ? "Describe the image to generate..." :
+                                    action === 'jira' ? "Enter Jira Ticket ID (e.g. PROJ-123)..." :
+                                        action === 'rovo' ? "Enter JQL Query (e.g. project=PROJ AND status='To Do')..." :
                                             "Paste code, ask questions, or attach an image for Visual QA..."
                     }
                     disabled={isLoading}

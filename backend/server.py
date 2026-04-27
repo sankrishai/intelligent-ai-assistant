@@ -88,12 +88,6 @@ class JiraRequest(BaseModel):
     api_token: str
     issue_key: str
 
-class ConfluenceRequest(BaseModel):
-    domain: str
-    email: str
-    api_token: str
-    page_id: str
-
 class RovoRequest(BaseModel):
     domain: str
     email: str
@@ -107,11 +101,6 @@ class AtlassianResponse(BaseModel):
 @app.post("/api/atlassian/jira", response_model=AtlassianResponse)
 async def fetch_jira(req: JiraRequest):
     result = get_jira_issue(req.domain, req.email, req.api_token, req.issue_key)
-    return AtlassianResponse(content=result, error="[ERROR]" in result)
-
-@app.post("/api/atlassian/confluence", response_model=AtlassianResponse)
-async def fetch_confluence(req: ConfluenceRequest):
-    result = get_confluence_page(req.domain, req.email, req.api_token, req.page_id)
     return AtlassianResponse(content=result, error="[ERROR]" in result)
 
 @app.post("/api/atlassian/rovo", response_model=AtlassianResponse)

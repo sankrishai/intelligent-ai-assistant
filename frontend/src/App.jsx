@@ -62,23 +62,16 @@ function App() {
     abortControllerRef.current = new AbortController()
     const { signal } = abortControllerRef.current
 
-    if (action === 'jira' || action === 'confluence' || action === 'rovo') {
-      const parts = text.split(' ')
-      let id = action === 'rovo' ? text : parts[0]
-      let extraPrompt = action === 'rovo' ? 'Analyze these Jira issues and answer any implied question or summarize them.' : parts.slice(1).join(' ').trim() || 'Generate comprehensive test cases for this.'
-
-      // Support fallback if user types `/jira PROJ-123` manually
-      if (id.startsWith('/jira') || id.startsWith('/confluence') || id.startsWith('/rovo')) {
-        if (action === 'rovo' && id.startsWith('/rovo')) {
-           id = text.replace(/^\/rovo\s+/, '')
-        } else {
-           id = parts[1] || ''
-           extraPrompt = parts.slice(2).join(' ').trim() || 'Generate comprehensive test cases for this.'
-        }
-      }
+    if (action === 'locator_gen') {
+      finalQuery = `You are a QA automation expert. Extract all interactive elements from the provided URL or DOM snippet. Generate native locators and a complete Page Object Model (POM) class. Default to Playwright (TypeScript) unless I specify Selenium or Cypress. Be comprehensive and use best-practice selector strategies.\n\nUser Input/DOM: ${text}`
+    } else if (action === 'jira' || action === 'rovo') {
+      // Atlassian Fetch
+      const idMatch = text.match(/^[^\s]+/)
+      const id = idMatch ? idMatch[0] : ''
+      const extraPrompt = text.slice(id.length).trim() || "Summarize this."
 
       if (!id) {
-        alert(`Please provide a ${action === 'jira' ? 'Jira ID' : action === 'rovo' ? 'JQL Query' : 'Confluence ID'}.`)
+        alert(`Please provide a ${action === 'jira' ? 'Jira ID' : 'JQL Query'}.`)
         return
       }
 
@@ -89,7 +82,6 @@ function App() {
 
       setIsLoading(true)
       let endpoint = '/api/atlassian/jira'
-      if (action === 'confluence') endpoint = '/api/atlassian/confluence'
       if (action === 'rovo') endpoint = '/api/atlassian/rovo'
       
       const reqBody = {
@@ -98,7 +90,6 @@ function App() {
         api_token: atlassianConfig.token
       }
       if (action === 'jira') reqBody.issue_key = id
-      else if (action === 'confluence') reqBody.page_id = id
       else if (action === 'rovo') reqBody.jql = id
 
       try {
