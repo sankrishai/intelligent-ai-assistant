@@ -9,10 +9,10 @@ const API_URL = import.meta.env.DEV ? 'http://localhost:8000' : ''
 
 function App() {
   const [messages, setMessages] = useState([])
-  const [provider, setProvider] = useState('gemini')
-  const [apiKey, setApiKey] = useState('')
-  const [temperature, setTemperature] = useState(0.6)
-  const [geminiModel, setGeminiModel] = useState('gemini-2.5-flash-lite')
+  const [provider, setProvider] = useState(() => localStorage.getItem('qa_provider') || 'gemini')
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('qa_apiKey') || '')
+  const [temperature, setTemperature] = useState(() => parseFloat(localStorage.getItem('qa_temperature')) || 0.6)
+  const [geminiModel, setGeminiModel] = useState(() => localStorage.getItem('qa_model') || 'gemini-2.5-flash-lite')
   const [isLoading, setIsLoading] = useState(false)
   const [backendStatus, setBackendStatus] = useState('checking')
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -41,6 +41,18 @@ function App() {
   useEffect(() => {
     localStorage.setItem('theme', theme)
   }, [theme])
+  useEffect(() => {
+    localStorage.setItem('qa_provider', provider)
+  }, [provider])
+  useEffect(() => {
+    localStorage.setItem('qa_apiKey', apiKey)
+  }, [apiKey])
+  useEffect(() => {
+    localStorage.setItem('qa_temperature', temperature.toString())
+  }, [temperature])
+  useEffect(() => {
+    localStorage.setItem('qa_model', geminiModel)
+  }, [geminiModel])
   useEffect(() => {
     localStorage.setItem('atlassianConfig', JSON.stringify(atlassianConfig))
   }, [atlassianConfig])

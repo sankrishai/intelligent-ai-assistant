@@ -86,6 +86,13 @@ const CAPABILITIES = [
 function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, chatAction, setChatAction, atlassianConfig, setAtlassianConfig }) {
     const [showIntegrations, setShowIntegrations] = useState(false)
     const [showApiKey, setShowApiKey] = useState(false)
+    const [configOpen, setConfigOpen] = useState(() => localStorage.getItem('sb_config') !== 'false')
+    const [capsOpen, setCapsOpen] = useState(() => localStorage.getItem('sb_caps') !== 'false')
+    const [integrationsOpen, setIntegrationsOpen] = useState(() => localStorage.getItem('sb_integrations') !== 'false')
+
+    const toggleConfig = () => { const v = !configOpen; setConfigOpen(v); localStorage.setItem('sb_config', v) }
+    const toggleCaps = () => { const v = !capsOpen; setCapsOpen(v); localStorage.setItem('sb_caps', v) }
+    const toggleIntegrations = () => { const v = !integrationsOpen; setIntegrationsOpen(v); localStorage.setItem('sb_integrations', v) }
 
     const activeProvider = PROVIDERS.find(p => p.id === provider)
     const models = PROVIDER_MODELS[provider] || []
@@ -125,12 +132,16 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
 
             <div className="sidebar-scroll">
                 {/* ── CONFIGURATION ── */}
-                <div className="sidebar-section-header">
+                <div className="sidebar-section-header" onClick={toggleConfig} style={{ cursor: 'pointer' }}>
                     <span className="section-header-line"></span>
                     <span className="section-header-text">Configuration</span>
                     <span className="section-header-line"></span>
+                    <span className={`section-chevron ${configOpen ? 'open' : ''}`}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </span>
                 </div>
 
+                {configOpen && (<>
                 {/* Provider */}
                 <div className="sidebar-section">
                     <label className="section-label">Provider</label>
@@ -189,10 +200,10 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                                 placeholder={`Enter ${apiKeyInfo.label}...`}
                                 value={apiKey}
                                 onChange={(e) => setApiKey(e.target.value)}
-                                style={{ paddingRight: '50px' }}
+                                style={{ paddingRight: '70px' }}
                             />
                             <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                {apiKey && <span className="input-check" style={{ position: 'static', transform: 'none' }}>✓</span>}
+                                {apiKey && <span className="api-saved-badge">Saved ✓</span>}
                                 <span
                                     onClick={() => setShowApiKey(!showApiKey)}
                                     style={{ cursor: 'pointer', fontSize: '0.9rem', opacity: 0.6 }}
@@ -202,7 +213,7 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                                 </span>
                             </div>
                         </div>
-                        <span className="help-text">{apiKeyInfo.hint}</span>
+                        <span className="help-text">{apiKeyInfo.hint} • Auto-saved to browser</span>
                     </div>
                 )}
 
@@ -226,14 +237,19 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                         <span>Creative</span>
                     </div>
                 </div>
+                </>)}
 
                 {/* ── CAPABILITIES ── */}
-                <div className="sidebar-section-header">
+                <div className="sidebar-section-header" onClick={toggleCaps} style={{ cursor: 'pointer' }}>
                     <span className="section-header-line"></span>
                     <span className="section-header-text">Capabilities</span>
                     <span className="section-header-line"></span>
+                    <span className={`section-chevron ${capsOpen ? 'open' : ''}`}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </span>
                 </div>
 
+                {capsOpen && (
                 <div className="capabilities-list">
                     {CAPABILITIES.map(cap => (
                         <button
@@ -251,14 +267,19 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                         </button>
                     ))}
                 </div>
+                )}
 
                 {/* ── INTEGRATIONS ── */}
-                <div className="sidebar-section-header">
+                <div className="sidebar-section-header" onClick={toggleIntegrations} style={{ cursor: 'pointer' }}>
                     <span className="section-header-line"></span>
                     <span className="section-header-text">Integrations</span>
                     <span className="section-header-line"></span>
+                    <span className={`section-chevron ${integrationsOpen ? 'open' : ''}`}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </span>
                 </div>
 
+                {integrationsOpen && (
                 <div className="sidebar-section">
                     <div
                         className="integration-toggle"
@@ -305,6 +326,7 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                         </div>
                     )}
                 </div>
+                )}
 
                 <div className="sidebar-divider"></div>
 
