@@ -9,15 +9,14 @@ const API_URL = import.meta.env.DEV ? 'http://localhost:8000' : ''
 
 function App() {
   const [messages, setMessages] = useState([])
-  const [provider, setProvider] = useState('ollama')
+  const [provider, setProvider] = useState('gemini')
   const [apiKey, setApiKey] = useState('')
   const [temperature, setTemperature] = useState(0.6)
-  const [geminiModel, setGeminiModel] = useState('llama3.2:3b') // Default to local Ollama model
+  const [geminiModel, setGeminiModel] = useState('gemini-2.5-flash-lite')
   const [isLoading, setIsLoading] = useState(false)
   const [backendStatus, setBackendStatus] = useState('checking')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
-  const [ollamaHost, setOllamaHost] = useState(() => localStorage.getItem('ollamaHost') || 'http://127.0.0.1:11434')
   const [atlassianConfig, setAtlassianConfig] = useState(() => {
     try {
       const saved = localStorage.getItem('atlassianConfig')
@@ -41,9 +40,6 @@ function App() {
   useEffect(() => {
     localStorage.setItem('theme', theme)
   }, [theme])
-  useEffect(() => {
-    localStorage.setItem('ollamaHost', ollamaHost)
-  }, [ollamaHost])
   useEffect(() => {
     localStorage.setItem('atlassianConfig', JSON.stringify(atlassianConfig))
   }, [atlassianConfig])
@@ -175,8 +171,7 @@ function App() {
             api_key: apiKey,
             temperature,
             model_name: geminiModel,
-            image_data: image,
-            ollama_host: provider === 'ollama' ? ollamaHost : undefined
+            image_data: image
           }),
           signal
         })
@@ -238,8 +233,6 @@ function App() {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         theme={theme}
         setTheme={setTheme}
-        ollamaHost={ollamaHost}
-        setOllamaHost={setOllamaHost}
         atlassianConfig={atlassianConfig}
         setAtlassianConfig={setAtlassianConfig}
       />

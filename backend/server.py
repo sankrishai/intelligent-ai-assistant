@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from logic import (
-    generate_tests_ollama, generate_tests_gemini, generate_tests_kimi,
+    generate_tests_gemini, generate_tests_kimi,
     generate_tests_openai, generate_tests_claude, generate_tests_deepseek, generate_tests_mistral,
     generate_tests_groq
 )
@@ -31,7 +31,6 @@ class GenerateRequest(BaseModel):
     temperature: float = 0.6
     model_name: str = ""
     image_data: Optional[str] = None
-    ollama_host: Optional[str] = None
 
 class GenerateResponse(BaseModel):
     response: str
@@ -45,9 +44,7 @@ async def generate(req: GenerateRequest):
     # Pre-process message for URLs or DOM snippets
     processed_message = await process_message_for_dom(req.message)
 
-    if req.provider == "ollama":
-        result = generate_tests_ollama(processed_message, temperature=req.temperature, host=req.ollama_host)
-    elif req.provider == "gemini":
+    if req.provider == "gemini":
         result = generate_tests_gemini(processed_message, req.api_key, model_name=model or "gemini-2.5-flash-lite", temperature=req.temperature)
     elif req.provider == "openai":
         result = generate_tests_openai(processed_message, req.api_key, model_name=model or "gpt-4o", temperature=req.temperature, image_data=req.image_data)

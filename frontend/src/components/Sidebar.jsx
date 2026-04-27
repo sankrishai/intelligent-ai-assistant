@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { OllamaIcon, GeminiIcon, OpenAIIcon, ClaudeIcon, DeepSeekIcon, MistralIcon, KimiIcon, GroqIcon } from './ProviderIcons'
+import { GeminiIcon, OpenAIIcon, ClaudeIcon, DeepSeekIcon, MistralIcon, KimiIcon, GroqIcon } from './ProviderIcons'
 import AiBrainIcon from './AiBrainIcon'
 
 const PROVIDERS = [
-    { id: 'ollama', label: 'Ollama (Local)', badge: 'Local', icon: OllamaIcon },
     { id: 'gemini', label: 'Google Gemini', badge: 'Cloud', icon: GeminiIcon },
     { id: 'openai', label: 'OpenAI', badge: 'Cloud', icon: OpenAIIcon },
     { id: 'claude', label: 'Anthropic Claude', badge: 'Cloud', icon: ClaudeIcon },
@@ -14,9 +13,6 @@ const PROVIDERS = [
 ]
 
 const PROVIDER_MODELS = {
-    ollama: [
-        { id: 'llama3.2:3b', label: 'Llama 3.2 3B' },
-    ],
     gemini: [
         { id: 'gemini-3.1-pro', label: 'Gemini 3.1 Pro' },
         { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite' },
@@ -78,14 +74,14 @@ const API_KEY_LABELS = {
     groq: { label: 'Groq API Key', hint: 'Get from console.groq.com' },
 }
 
-function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, ollamaHost, setOllamaHost, atlassianConfig, setAtlassianConfig }) {
+function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, atlassianConfig, setAtlassianConfig }) {
     const [showAtlassian, setShowAtlassian] = useState(false)
     const [showApiKey, setShowApiKey] = useState(false)
 
     const activeProvider = PROVIDERS.find(p => p.id === provider)
     const models = PROVIDER_MODELS[provider] || []
     const apiKeyInfo = API_KEY_LABELS[provider]
-    const needsApiKey = provider !== 'ollama'
+    const needsApiKey = true
     const ActiveIcon = activeProvider?.icon
 
     const handleModelChange = (e) => {
@@ -154,8 +150,8 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                                 </option>
                             ))}
                         </select>
-                        <span className={`provider-type-badge ${provider === 'ollama' ? 'badge-local' : 'badge-cloud'}`}>
-                            {provider === 'ollama' ? 'Local' : 'Cloud'}
+                        <span className="provider-type-badge badge-cloud">
+                            Cloud
                         </span>
                     </div>
                 </div>
@@ -211,22 +207,6 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                     </div>
                 )}
 
-                {/* Ollama Host */}
-                {provider === 'ollama' && (
-                    <div className="sidebar-section">
-                        <label className="section-label">🌐 Ollama Host URL</label>
-                        <div className="input-wrapper">
-                            <input
-                                type="text"
-                                className="api-key-input"
-                                placeholder="e.g. https://xyz.ngrok.io"
-                                value={ollamaHost}
-                                onChange={(e) => setOllamaHost(e.target.value)}
-                            />
-                        </div>
-                        <span className="help-text">Use Ngrok to tunnel localhost:11434 if using Vercel.</span>
-                    </div>
-                )}
 
                 {/* Temperature */}
                 <div className="sidebar-section">
