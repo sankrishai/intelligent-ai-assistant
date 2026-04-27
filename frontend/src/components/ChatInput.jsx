@@ -60,7 +60,11 @@ function ChatInput({ onSend, isLoading, onStop, action, setAction }) {
     return (
         <form className="chat-input-container" onSubmit={handleSubmit} style={{ position: 'relative' }}>
             <div className="input-hint">
-                <span>Press <kbd>Enter</kbd> to send, <kbd>Shift+Enter</kbd> for new line.</span>
+                {imagePreview ? (
+                    <span style={{ color: 'var(--green-400)', fontWeight: '700', animation: 'pulse-green 2s infinite' }}>✨ Visual QA Mode Active (Screenshot Attached)</span>
+                ) : (
+                    <span>Press <kbd>Enter</kbd> to send, <kbd>Shift+Enter</kbd> for new line.</span>
+                )}
                 {charCount > 0 && <span className="char-count">{charCount.toLocaleString()} chars</span>}
             </div>
 

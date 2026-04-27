@@ -7,7 +7,7 @@ import google.generativeai as genai
 from openai import OpenAI
 from templates import SYSTEM_PROMPT, format_user_prompt
 
-def generate_tests_gemini(source_code: str, api_key: str, model_name: str = "gemini-1.5-pro", temperature: float = 0.6) -> str:
+def generate_tests_gemini(source_code: str, api_key: str, model_name: str = "gemini-1.5-pro", temperature: float = 0.6, image_data: str = None) -> str:
     """
     Generates tests using Google Gemini API.
     """
@@ -24,8 +24,22 @@ def generate_tests_gemini(source_code: str, api_key: str, model_name: str = "gem
         # Configure generation config
         config = genai.GenerationConfig(temperature=temperature)
         
+        content = [format_user_prompt(source_code)]
+        
+        if image_data:
+            import base64
+            # Handle data:image/png;base64, format
+            if "," in image_data:
+                header, encoded = image_data.split(",", 1)
+                mime_type = header.split(":")[1].split(";")[0]
+                img_bytes = base64.b64decode(encoded)
+                content.append({
+                    "mime_type": mime_type,
+                    "data": img_bytes
+                })
+        
         response = model.generate_content(
-            format_user_prompt(source_code),
+            content,
             generation_config=config
         )
         return response.text
@@ -118,19 +132,37 @@ def generate_image_openai(prompt: str, api_key: str) -> str:
         return f"❌ Image Generation Error: {str(e)}"
 
 
-def generate_tests_claude(source_code: str, api_key: str, model_name: str = "claude-sonnet-4-20250514", temperature: float = 0.6) -> str:
+def generate_tests_claude(source_code: str, api_key: str, model_name: str = "claude-sonnet-4-20250514", temperature: float = 0.6, image_data: str = None) -> str:
     """Generates tests using Anthropic Claude API."""
     if not api_key:
         return "⚠️ Please enter your Anthropic API Key in the sidebar."
     try:
         import anthropic
         client = anthropic.Anthropic(api_key=api_key)
+        
+        user_content = [{"type": "text", "text": format_user_prompt(source_code)}]
+        
+        if image_data:
+            import base64
+            # Handle data:image/png;base64, format
+            if "," in image_data:
+                header, encoded = image_data.split(",", 1)
+                media_type = header.split(":")[1].split(";")[0]
+                user_content.append({
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": media_type,
+                        "data": encoded,
+                    },
+                })
+
         response = client.messages.create(
             model=model_name,
             max_tokens=4096,
             system=SYSTEM_PROMPT,
             messages=[
-                {"role": "user", "content": format_user_prompt(source_code)}
+                {"role": "user", "content": user_content}
             ],
             temperature=temperature
         )

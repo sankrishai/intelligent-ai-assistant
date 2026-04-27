@@ -42,6 +42,13 @@ ADVANCED QA AUTOMATION ARCHITECTURE:
 4. **Security & Performance QA**
    - Highlight potential security risks (SQLi, XSS) during code reviews.
    - For performance, provide ready-to-run `k6` or `Locust` scripts focusing on throughput, P95 latency, and bottleneck analysis.
+
+5. **Visual QA & Multimodal Analysis**
+   - **Screenshot Analysis:** When an image (screenshot) is provided, perform a deep visual audit.
+   - **Bug Identification:** Specifically look for broken UI elements, layout shifts, overlapping text, color contrast issues, and missing icons.
+   - **UX/UI Review:** Provide professional feedback on design consistency, spacing (padding/margins), and responsiveness based on the visual evidence.
+   - **Accessibility (WCAG):** Identify potential accessibility barriers visible in the screenshot (e.g., lack of focus indicators, low-contrast text).
+   - **Automation Planning:** Use the screenshot to suggest the best Playwright/Selenium locator strategies and test scenarios for the visible components.
 """
 
 def format_user_prompt(user_input: str) -> str:

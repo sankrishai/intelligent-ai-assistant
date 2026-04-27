@@ -45,11 +45,11 @@ async def generate(req: GenerateRequest):
     processed_message = await process_message_for_dom(req.message)
 
     if req.provider == "gemini":
-        result = generate_tests_gemini(processed_message, req.api_key, model_name=model or "gemini-2.5-flash-lite", temperature=req.temperature)
+        result = generate_tests_gemini(processed_message, req.api_key, model_name=model or "gemini-2.5-flash-lite", temperature=req.temperature, image_data=req.image_data)
     elif req.provider == "openai":
         result = generate_tests_openai(processed_message, req.api_key, model_name=model or "gpt-4o", temperature=req.temperature, image_data=req.image_data)
     elif req.provider == "claude":
-        result = generate_tests_claude(processed_message, req.api_key, model_name=model or "claude-sonnet-4-20250514", temperature=req.temperature)
+        result = generate_tests_claude(processed_message, req.api_key, model_name=model or "claude-sonnet-4-20250514", temperature=req.temperature, image_data=req.image_data)
     elif req.provider == "deepseek":
         result = generate_tests_deepseek(processed_message, req.api_key, model_name=model or "deepseek-chat", temperature=req.temperature)
     elif req.provider == "mistral":
