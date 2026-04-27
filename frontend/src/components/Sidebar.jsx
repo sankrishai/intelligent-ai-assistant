@@ -78,7 +78,7 @@ const API_KEY_LABELS = {
     groq: { label: 'Groq API Key', hint: 'Get from console.groq.com' },
 }
 
-function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, atlassianConfig, setAtlassianConfig }) {
+function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, ollamaHost, setOllamaHost, atlassianConfig, setAtlassianConfig }) {
     const [showAtlassian, setShowAtlassian] = useState(false)
     const [showApiKey, setShowApiKey] = useState(false)
 
@@ -208,6 +208,23 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                             </div>
                         </div>
                         <span className="help-text">{apiKeyInfo.hint}</span>
+                    </div>
+                )}
+
+                {/* Ollama Host */}
+                {provider === 'ollama' && (
+                    <div className="sidebar-section">
+                        <label className="section-label">🌐 Ollama Host URL</label>
+                        <div className="input-wrapper">
+                            <input
+                                type="text"
+                                className="api-key-input"
+                                placeholder="e.g. https://xyz.ngrok.io"
+                                value={ollamaHost}
+                                onChange={(e) => setOllamaHost(e.target.value)}
+                            />
+                        </div>
+                        <span className="help-text">Use Ngrok to tunnel localhost:11434 if using Vercel.</span>
                     </div>
                 )}
 

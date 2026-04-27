@@ -8,7 +8,7 @@ import google.generativeai as genai
 from openai import OpenAI
 from templates import SYSTEM_PROMPT, format_user_prompt
 
-def generate_tests_ollama(source_code: str, model: str = "llama3.2:3b", temperature: float = 0.6) -> str:
+def generate_tests_ollama(source_code: str, model: str = "llama3.2:3b", temperature: float = 0.6, host: str = None) -> str:
     """
     Generates tests using Local Ollama.
     """
@@ -17,11 +17,20 @@ def generate_tests_ollama(source_code: str, model: str = "llama3.2:3b", temperat
             {'role': 'system', 'content': SYSTEM_PROMPT},
             {'role': 'user', 'content': format_user_prompt(source_code)}
         ]
-        response = ollama.chat(
-            model=model,
-            messages=messages,
-            options={'temperature': temperature}
-        )
+        
+        if host:
+            client = ollama.Client(host=host)
+            response = client.chat(
+                model=model,
+                messages=messages,
+                options={'temperature': temperature}
+            )
+        else:
+            response = ollama.chat(
+                model=model,
+                messages=messages,
+                options={'temperature': temperature}
+            )
         return response['message']['content']
     except Exception as e:
         return f"❌ Ollama Error: {str(e)}"

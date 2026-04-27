@@ -17,6 +17,7 @@ function App() {
   const [backendStatus, setBackendStatus] = useState('checking')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+  const [ollamaHost, setOllamaHost] = useState(() => localStorage.getItem('ollamaHost') || 'http://127.0.0.1:11434')
   const [atlassianConfig, setAtlassianConfig] = useState(() => {
     return JSON.parse(localStorage.getItem('atlassianConfig')) || { domain: '', email: '', token: '' }
   })
@@ -35,6 +36,9 @@ function App() {
   useEffect(() => {
     localStorage.setItem('theme', theme)
   }, [theme])
+  useEffect(() => {
+    localStorage.setItem('ollamaHost', ollamaHost)
+  }, [ollamaHost])
   useEffect(() => {
     localStorage.setItem('atlassianConfig', JSON.stringify(atlassianConfig))
   }, [atlassianConfig])
@@ -166,7 +170,8 @@ function App() {
             api_key: apiKey,
             temperature,
             model_name: geminiModel,
-            image_data: image
+            image_data: image,
+            ollama_host: provider === 'ollama' ? ollamaHost : undefined
           }),
           signal
         })
@@ -228,6 +233,8 @@ function App() {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         theme={theme}
         setTheme={setTheme}
+        ollamaHost={ollamaHost}
+        setOllamaHost={setOllamaHost}
         atlassianConfig={atlassianConfig}
         setAtlassianConfig={setAtlassianConfig}
       />

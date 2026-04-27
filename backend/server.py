@@ -31,6 +31,7 @@ class GenerateRequest(BaseModel):
     temperature: float = 0.6
     model_name: str = ""
     image_data: Optional[str] = None
+    ollama_host: Optional[str] = None
 
 class GenerateResponse(BaseModel):
     response: str
@@ -45,7 +46,7 @@ async def generate(req: GenerateRequest):
     processed_message = await process_message_for_dom(req.message)
 
     if req.provider == "ollama":
-        result = generate_tests_ollama(processed_message, temperature=req.temperature)
+        result = generate_tests_ollama(processed_message, temperature=req.temperature, host=req.ollama_host)
     elif req.provider == "gemini":
         result = generate_tests_gemini(processed_message, req.api_key, model_name=model or "gemini-2.5-flash-lite", temperature=req.temperature)
     elif req.provider == "openai":
