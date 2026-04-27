@@ -20,6 +20,7 @@ An enterprise-grade, localized, and cloud-connected AI assistant designed specif
   - 🤖 **Ask Rovo (Jira Search):** A lightweight agentic Rovo clone! Run JQL queries to search your entire Jira environment and have the AI synthesize the results instantly.
   - 🔵 **Query Jira:** Easily pull a specific Jira ticket data directly into your AI context to generate immediate test steps based on bug reports or feature tickets.
   - 📘 **Query Confluence:** Digest huge Confluence engineering docs directly into your chat.
+  - 🔍 **DOM Distiller (Auto-Locators):** Paste a URL or raw HTML snippet and the backend automatically fetches, cleans, and distills the DOM—removing noise and preserving only semantic/interactive elements—so the AI can perfectly generate Page Object Models and native locators for Playwright or Selenium.
 
 ## 🔌 Supported AI Providers
 

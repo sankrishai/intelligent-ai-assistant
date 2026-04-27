@@ -35,25 +35,31 @@ class GenerateRequest(BaseModel):
 class GenerateResponse(BaseModel):
     response: str
 
+from dom_distiller import process_message_for_dom
+
 @app.post("/api/generate", response_model=GenerateResponse)
 async def generate(req: GenerateRequest):
     model = req.model_name or ""
+    
+    # Pre-process message for URLs or DOM snippets
+    processed_message = await process_message_for_dom(req.message)
+
     if req.provider == "ollama":
-        result = generate_tests_ollama(req.message, temperature=req.temperature)
+        result = generate_tests_ollama(processed_message, temperature=req.temperature)
     elif req.provider == "gemini":
-        result = generate_tests_gemini(req.message, req.api_key, model_name=model or "gemini-2.5-flash-lite", temperature=req.temperature)
+        result = generate_tests_gemini(processed_message, req.api_key, model_name=model or "gemini-2.5-flash-lite", temperature=req.temperature)
     elif req.provider == "openai":
-        result = generate_tests_openai(req.message, req.api_key, model_name=model or "gpt-4o", temperature=req.temperature, image_data=req.image_data)
+        result = generate_tests_openai(processed_message, req.api_key, model_name=model or "gpt-4o", temperature=req.temperature, image_data=req.image_data)
     elif req.provider == "claude":
-        result = generate_tests_claude(req.message, req.api_key, model_name=model or "claude-sonnet-4-20250514", temperature=req.temperature)
+        result = generate_tests_claude(processed_message, req.api_key, model_name=model or "claude-sonnet-4-20250514", temperature=req.temperature)
     elif req.provider == "deepseek":
-        result = generate_tests_deepseek(req.message, req.api_key, model_name=model or "deepseek-chat", temperature=req.temperature)
+        result = generate_tests_deepseek(processed_message, req.api_key, model_name=model or "deepseek-chat", temperature=req.temperature)
     elif req.provider == "mistral":
-        result = generate_tests_mistral(req.message, req.api_key, model_name=model or "mistral-large-latest", temperature=req.temperature)
+        result = generate_tests_mistral(processed_message, req.api_key, model_name=model or "mistral-large-latest", temperature=req.temperature)
     elif req.provider == "kimi":
-        result = generate_tests_kimi(req.message, req.api_key, temperature=req.temperature)
+        result = generate_tests_kimi(processed_message, req.api_key, temperature=req.temperature)
     elif req.provider == "groq":
-        result = generate_tests_groq(req.message, req.api_key, model_name=model or "llama-3.3-70b-versatile", temperature=req.temperature)
+        result = generate_tests_groq(processed_message, req.api_key, model_name=model or "llama-3.3-70b-versatile", temperature=req.temperature)
     else:
         result = f"Unknown provider: {req.provider}"
     

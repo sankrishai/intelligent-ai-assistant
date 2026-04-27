@@ -6,3 +6,4 @@ openai
 httpx
 anthropic
 ddgs
+beautifulsoup4
