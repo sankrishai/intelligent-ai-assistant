@@ -19,7 +19,12 @@ function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const [ollamaHost, setOllamaHost] = useState(() => localStorage.getItem('ollamaHost') || 'http://127.0.0.1:11434')
   const [atlassianConfig, setAtlassianConfig] = useState(() => {
-    return JSON.parse(localStorage.getItem('atlassianConfig')) || { domain: '', email: '', token: '' }
+    try {
+      const saved = localStorage.getItem('atlassianConfig')
+      return saved && saved !== 'undefined' ? JSON.parse(saved) : { domain: '', email: '', token: '' }
+    } catch(e) {
+      return { domain: '', email: '', token: '' }
+    }
   })
 
   const abortControllerRef = useRef(null)
