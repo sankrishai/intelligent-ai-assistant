@@ -491,6 +491,21 @@ body,
   transform: rotate(180deg);
 }
 
+.section-content-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+  overflow: hidden;
+}
+
+.section-content-wrapper.open {
+  grid-template-rows: 1fr;
+}
+
+.section-content-inner {
+  min-height: 0;
+}
+
 .sidebar-section-header:hover .section-header-text {
   color: var(--text-3);
 }

@@ -141,103 +141,105 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                     </span>
                 </div>
 
-                {configOpen && (<>
-                {/* Provider */}
-                <div className="sidebar-section">
-                    <label className="section-label">Provider</label>
-                    <div className="provider-dropdown-wrapper">
-                        {ActiveIcon && (
-                            <span className="provider-dropdown-icon">
-                                <ActiveIcon size={20} />
-                            </span>
-                        )}
-                        <select
-                            className="provider-dropdown"
-                            value={provider}
-                            onChange={(e) => {
-                                const newProvider = e.target.value
-                                setProvider(newProvider)
-                                setApiKey('')
-                                const newModels = PROVIDER_MODELS[newProvider] || []
-                                if (newModels.length > 0) {
-                                    setGeminiModel(newModels[0].id)
-                                }
-                            }}
-                        >
-                            {PROVIDERS.map(p => (
-                                <option key={p.id} value={p.id}>
-                                    {p.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                {/* Model */}
-                {models.length > 0 && (
-                    <div className="sidebar-section">
-                        <label className="section-label">Model</label>
-                        <select
-                            className="model-select"
-                            value={currentModel}
-                            onChange={handleModelChange}
-                        >
-                            {models.map(m => (
-                                <option key={m.id} value={m.id}>{m.label}</option>
-                            ))}
-                        </select>
-                    </div>
-                )}
-
-                {/* API Key */}
-                {apiKeyInfo && (
-                    <div className="sidebar-section">
-                        <label className="section-label">🔑 {apiKeyInfo.label}</label>
-                        <div className="input-wrapper">
-                            <input
-                                type={showApiKey ? "text" : "password"}
-                                className="api-key-input"
-                                placeholder={`Enter ${apiKeyInfo.label}...`}
-                                value={apiKey}
-                                onChange={(e) => setApiKey(e.target.value)}
-                                style={{ paddingRight: '70px' }}
-                            />
-                            <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                {apiKey && <span className="api-saved-badge">Saved ✓</span>}
-                                <span
-                                    onClick={() => setShowApiKey(!showApiKey)}
-                                    style={{ cursor: 'pointer', fontSize: '0.9rem', opacity: 0.6 }}
-                                    title={showApiKey ? "Hide Key" : "Show Key"}
+                <div className={`section-content-wrapper ${configOpen ? 'open' : ''}`}>
+                    <div className="section-content-inner">
+                        {/* Provider */}
+                        <div className="sidebar-section">
+                            <label className="section-label">Provider</label>
+                            <div className="provider-dropdown-wrapper">
+                                {ActiveIcon && (
+                                    <span className="provider-dropdown-icon">
+                                        <ActiveIcon size={20} />
+                                    </span>
+                                )}
+                                <select
+                                    className="provider-dropdown"
+                                    value={provider}
+                                    onChange={(e) => {
+                                        const newProvider = e.target.value
+                                        setProvider(newProvider)
+                                        setApiKey('')
+                                        const newModels = PROVIDER_MODELS[newProvider] || []
+                                        if (newModels.length > 0) {
+                                            setGeminiModel(newModels[0].id)
+                                        }
+                                    }}
                                 >
-                                    {showApiKey ? '🙈' : '👁️'}
-                                </span>
+                                    {PROVIDERS.map(p => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
-                        <span className="help-text">{apiKeyInfo.hint} • Auto-saved to browser</span>
-                    </div>
-                )}
 
-                {/* Temperature — Compact Inline */}
-                <div className="sidebar-section">
-                    <div className="temp-inline">
-                        <label className="section-label" style={{ marginBottom: 0 }}>🌡️ Temperature</label>
-                        <span className="temp-value">{temperature.toFixed(1)}</span>
-                    </div>
-                    <input
-                        type="range"
-                        className="temp-slider"
-                        min="0"
-                        max="1"
-                        step="0.1"
-                        value={temperature}
-                        onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                    />
-                    <div className="slider-labels">
-                        <span>Precise</span>
-                        <span>Creative</span>
+                        {/* Model */}
+                        {models.length > 0 && (
+                            <div className="sidebar-section">
+                                <label className="section-label">Model</label>
+                                <select
+                                    className="model-select"
+                                    value={currentModel}
+                                    onChange={handleModelChange}
+                                >
+                                    {models.map(m => (
+                                        <option key={m.id} value={m.id}>{m.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        {/* API Key */}
+                        {apiKeyInfo && (
+                            <div className="sidebar-section">
+                                <label className="section-label">🔑 {apiKeyInfo.label}</label>
+                                <div className="input-wrapper">
+                                    <input
+                                        type={showApiKey ? "text" : "password"}
+                                        className="api-key-input"
+                                        placeholder={`Enter ${apiKeyInfo.label}...`}
+                                        value={apiKey}
+                                        onChange={(e) => setApiKey(e.target.value)}
+                                        style={{ paddingRight: '70px' }}
+                                    />
+                                    <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                        {apiKey && <span className="api-saved-badge">Saved ✓</span>}
+                                        <span
+                                            onClick={() => setShowApiKey(!showApiKey)}
+                                            style={{ cursor: 'pointer', fontSize: '0.9rem', opacity: 0.6 }}
+                                            title={showApiKey ? "Hide Key" : "Show Key"}
+                                        >
+                                            {showApiKey ? '🙈' : '👁️'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <span className="help-text">{apiKeyInfo.hint} • Auto-saved to browser</span>
+                            </div>
+                        )}
+
+                        {/* Temperature — Compact Inline */}
+                        <div className="sidebar-section">
+                            <div className="temp-inline">
+                                <label className="section-label" style={{ marginBottom: 0 }}>🌡️ Temperature</label>
+                                <span className="temp-value">{temperature.toFixed(1)}</span>
+                            </div>
+                            <input
+                                type="range"
+                                className="temp-slider"
+                                min="0"
+                                max="1"
+                                step="0.1"
+                                value={temperature}
+                                onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                            />
+                            <div className="slider-labels">
+                                <span>Precise</span>
+                                <span>Creative</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                </>)}
 
                 {/* ── CAPABILITIES ── */}
                 <div className="sidebar-section-header" onClick={toggleCaps} style={{ cursor: 'pointer' }}>
@@ -249,25 +251,27 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                     </span>
                 </div>
 
-                {capsOpen && (
-                <div className="capabilities-list">
-                    {CAPABILITIES.map(cap => (
-                        <button
-                            key={cap.id}
-                            className={`capability-pill ${chatAction === cap.id ? 'active' : ''}`}
-                            onClick={() => setChatAction(cap.id)}
-                            title={cap.description}
-                        >
-                            <span className="cap-icon">{cap.icon}</span>
-                            <div className="cap-content">
-                                <span className="cap-label">{cap.label}</span>
-                                <span className="cap-desc">{cap.description}</span>
-                            </div>
-                            {chatAction === cap.id && <span className="cap-active-dot"></span>}
-                        </button>
-                    ))}
+                <div className={`section-content-wrapper ${capsOpen ? 'open' : ''}`}>
+                    <div className="section-content-inner">
+                        <div className="capabilities-list">
+                            {CAPABILITIES.map(cap => (
+                                <button
+                                    key={cap.id}
+                                    className={`capability-pill ${chatAction === cap.id ? 'active' : ''}`}
+                                    onClick={() => setChatAction(cap.id)}
+                                    title={cap.description}
+                                >
+                                    <span className="cap-icon">{cap.icon}</span>
+                                    <div className="cap-content">
+                                        <span className="cap-label">{cap.label}</span>
+                                        <span className="cap-desc">{cap.description}</span>
+                                    </div>
+                                    {chatAction === cap.id && <span className="cap-active-dot"></span>}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
-                )}
 
                 {/* ── INTEGRATIONS ── */}
                 <div className="sidebar-section-header" onClick={toggleIntegrations} style={{ cursor: 'pointer' }}>
@@ -279,54 +283,56 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                     </span>
                 </div>
 
-                {integrationsOpen && (
-                <div className="sidebar-section">
-                    <div
-                        className="integration-toggle"
-                        onClick={() => setShowIntegrations(!showIntegrations)}
-                    >
-                        <span className="integration-toggle-icon">🔗</span>
-                        <span className="integration-toggle-label">Jira / Rovo Setup</span>
-                        <span className={`integration-chevron ${showIntegrations ? 'open' : ''}`}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </span>
-                    </div>
-                    {showIntegrations && (
-                        <div className="integration-fields">
-                            <div className="input-wrapper">
-                                <input
-                                    type="text"
-                                    className="api-key-input"
-                                    placeholder="Domain (e.g. company.atlassian.net)"
-                                    value={atlassianConfig.domain}
-                                    onChange={(e) => setAtlassianConfig({ ...atlassianConfig, domain: e.target.value })}
-                                />
+                <div className={`section-content-wrapper ${integrationsOpen ? 'open' : ''}`}>
+                    <div className="section-content-inner">
+                        <div className="sidebar-section">
+                            <div
+                                className="integration-toggle"
+                                onClick={() => setShowIntegrations(!showIntegrations)}
+                            >
+                                <span className="integration-toggle-icon">🔗</span>
+                                <span className="integration-toggle-label">Jira / Rovo Setup</span>
+                                <span className={`integration-chevron ${showIntegrations ? 'open' : ''}`}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </span>
                             </div>
-                            <div className="input-wrapper">
-                                <input
-                                    type="email"
-                                    className="api-key-input"
-                                    placeholder="Account Email"
-                                    value={atlassianConfig.email}
-                                    onChange={(e) => setAtlassianConfig({ ...atlassianConfig, email: e.target.value })}
-                                />
-                            </div>
-                            <div className="input-wrapper">
-                                <input
-                                    type="password"
-                                    className="api-key-input"
-                                    placeholder="Jira API Token"
-                                    value={atlassianConfig.token}
-                                    onChange={(e) => setAtlassianConfig({ ...atlassianConfig, token: e.target.value })}
-                                />
-                            </div>
-                            <span className="help-text">Select <strong>Query Jira</strong> or <strong>Rovo</strong> from Capabilities above to use.</span>
+                            {showIntegrations && (
+                                <div className="integration-fields">
+                                    <div className="input-wrapper">
+                                        <input
+                                            type="text"
+                                            className="api-key-input"
+                                            placeholder="Domain (e.g. company.atlassian.net)"
+                                            value={atlassianConfig.domain}
+                                            onChange={(e) => setAtlassianConfig({ ...atlassianConfig, domain: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="input-wrapper">
+                                        <input
+                                            type="email"
+                                            className="api-key-input"
+                                            placeholder="Account Email"
+                                            value={atlassianConfig.email}
+                                            onChange={(e) => setAtlassianConfig({ ...atlassianConfig, email: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="input-wrapper">
+                                        <input
+                                            type="password"
+                                            className="api-key-input"
+                                            placeholder="Jira API Token"
+                                            value={atlassianConfig.token}
+                                            onChange={(e) => setAtlassianConfig({ ...atlassianConfig, token: e.target.value })}
+                                        />
+                                    </div>
+                                    <span className="help-text">Select <strong>Query Jira</strong> or <strong>Rovo</strong> from Capabilities above to use.</span>
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
                 </div>
-                )}
 
                 <div className="sidebar-divider"></div>
 

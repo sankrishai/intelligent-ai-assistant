@@ -8,7 +8,14 @@ import './App.css'
 const API_URL = import.meta.env.DEV ? 'http://localhost:8000' : ''
 
 function App() {
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem('qa_messages')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
   const [provider, setProvider] = useState(() => localStorage.getItem('qa_provider') || 'gemini')
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('qa_apiKey') || '')
   const [temperature, setTemperature] = useState(() => parseFloat(localStorage.getItem('qa_temperature')) || 0.6)
@@ -41,6 +48,9 @@ function App() {
   useEffect(() => {
     localStorage.setItem('theme', theme)
   }, [theme])
+  useEffect(() => {
+    localStorage.setItem('qa_messages', JSON.stringify(messages))
+  }, [messages])
   useEffect(() => {
     localStorage.setItem('qa_provider', provider)
   }, [provider])
