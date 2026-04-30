@@ -3,6 +3,7 @@
 import os
 os.environ['PYTHONIOENCODING'] = 'utf-8'
 
+import re
 import httpx
 import google.generativeai as genai
 from openai import OpenAI
@@ -10,6 +11,14 @@ from templates import SYSTEM_PROMPT, format_user_prompt
 
 # Shared httpx client that skips SSL verification (needed for corporate proxies/firewalls)
 _http_client = httpx.Client(verify=False)
+
+# Strip <think>...</think> blocks from model responses (Qwen, DeepSeek R1, etc.)
+_THINK_PATTERN = re.compile(r'<think>[\s\S]*?</think>\s*', re.IGNORECASE)
+
+
+def _clean_response(text: str) -> str:
+    """Remove internal reasoning tags and leading/trailing whitespace."""
+    return _THINK_PATTERN.sub('', text).strip()
 
 
 def _openai_client(api_key: str, base_url: str = None) -> OpenAI:
@@ -75,7 +84,7 @@ def generate_tests_gemini(source_code: str, api_key: str, model_name: str = "gem
             response = chat.send_message(content, generation_config=config)
         else:
             response = model.generate_content(content, generation_config=config)
-        return response.text
+        return _clean_response(response.text)
     except Exception as e:
         return f"❌ Gemini Error: {str(e)}"
 
@@ -102,7 +111,7 @@ def generate_tests_kimi(source_code: str, api_key: str, model_name: str = "kimi-
             messages=_build_history_messages(history or [], clean_system_prompt, clean_user_prompt),
             temperature=temperature
         )
-        return response.choices[0].message.content
+        return _clean_response(response.choices[0].message.content)
     except Exception as e:
         return f"❌ Kimi Error: {str(e)}"
 
@@ -141,7 +150,7 @@ def generate_tests_openai(source_code: str, api_key: str, model_name: str = "gpt
             params["temperature"] = temperature
 
         response = client.chat.completions.create(**params)
-        return response.choices[0].message.content
+        return _clean_response(response.choices[0].message.content)
     except Exception as e:
         return f"❌ OpenAI Error: {str(e)}"
 
@@ -204,7 +213,7 @@ def generate_tests_claude(source_code: str, api_key: str, model_name: str = "cla
             messages=claude_messages,
             temperature=temperature
         )
-        return response.content[0].text
+        return _clean_response(response.content[0].text)
     except Exception as e:
         return f"❌ Claude Error: {str(e)}"
 
@@ -220,7 +229,7 @@ def generate_tests_deepseek(source_code: str, api_key: str, model_name: str = "d
             messages=_build_history_messages(history or [], SYSTEM_PROMPT, format_user_prompt(source_code)),
             temperature=temperature
         )
-        return response.choices[0].message.content
+        return _clean_response(response.choices[0].message.content)
     except Exception as e:
         return f"❌ DeepSeek Error: {str(e)}"
 
@@ -236,7 +245,7 @@ def generate_tests_mistral(source_code: str, api_key: str, model_name: str = "mi
             messages=_build_history_messages(history or [], SYSTEM_PROMPT, format_user_prompt(source_code)),
             temperature=temperature
         )
-        return response.choices[0].message.content
+        return _clean_response(response.choices[0].message.content)
     except Exception as e:
         return f"❌ Mistral Error: {str(e)}"
 
@@ -252,7 +261,7 @@ def generate_tests_groq(source_code: str, api_key: str, model_name: str = "llama
             messages=_build_history_messages(history or [], SYSTEM_PROMPT, format_user_prompt(source_code)),
             temperature=temperature
         )
-        return response.choices[0].message.content
+        return _clean_response(response.choices[0].message.content)
     except Exception as e:
         return f"❌ Groq Error: {str(e)}"
 
@@ -293,7 +302,9 @@ async def stream_tests_gemini(source_code: str, api_key: str, model_name: str = 
 
         for chunk in response:
             if chunk.text:
-                yield chunk.text
+                cleaned = _THINK_PATTERN.sub('', chunk.text)
+                if cleaned:
+                    yield cleaned
     except Exception as e:
         yield f"❌ Gemini Error: {str(e)}"
 
@@ -304,9 +315,42 @@ async def _stream_openai_compatible(client, model_name, messages, temperature, s
     if not skip_temperature:
         params["temperature"] = temperature
     response = client.chat.completions.create(**params)
+
+    # Buffer to strip <think>...</think> blocks from streamed output
+    inside_think = False
+    buffer = ""
+
     for chunk in response:
         if chunk.choices and chunk.choices[0].delta.content:
-            yield chunk.choices[0].delta.content
+            token = chunk.choices[0].delta.content
+            buffer += token
+
+            # Check for opening <think> tag
+            if not inside_think and "<think>" in buffer.lower():
+                # Output everything before the tag
+                idx = buffer.lower().index("<think>")
+                if idx > 0:
+                    yield buffer[:idx]
+                buffer = buffer[idx:]
+                inside_think = True
+
+            if inside_think:
+                # Check for closing </think> tag
+                if "</think>" in buffer.lower():
+                    idx = buffer.lower().index("</think>") + len("</think>")
+                    buffer = buffer[idx:].lstrip()
+                    inside_think = False
+                    # Continue — remaining buffer will be yielded next iteration
+                continue
+
+            # Not inside think block — yield the buffer
+            if buffer:
+                yield buffer
+                buffer = ""
+
+    # Yield any remaining buffer
+    if buffer and not inside_think:
+        yield buffer
 
 
 async def stream_tests_openai(source_code: str, api_key: str, model_name: str = "gpt-4o", temperature: float = 0.6, image_data: str = None, history: list = None):

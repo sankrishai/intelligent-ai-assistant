@@ -32,7 +32,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [chatAction, setChatAction] = useState('text')
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
-  const [streamingEnabled, setStreamingEnabled] = useState(() => localStorage.getItem('qa_streaming') !== 'false')
+  const [streamingEnabled, setStreamingEnabled] = useState(() => localStorage.getItem('qa_streaming') === 'true')
   const [atlassianConfig, setAtlassianConfig] = useState(() => {
     try {
       const saved = localStorage.getItem('atlassianConfig')
