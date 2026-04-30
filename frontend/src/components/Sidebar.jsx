@@ -120,9 +120,9 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
             <div className="sidebar-brand">
                 <span className="brand-icon"><AiBrainIcon size={28} /></span>
                 <div>
-                    <div className="brand-name">QA Automation Architect</div>
+                    <div className="brand-name">Intelligent QA Assistant</div>
                     <div className="brand-version">
-                        v2.1
+                        Multi-Provider AI for Testing
                         <span className="brand-status-separator">•</span>
                         <span className={`brand-status-dot ${backendStatus}`}></span>
                         <span className={`brand-status-text ${backendStatus}`}>

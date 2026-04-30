@@ -92,8 +92,8 @@ async def process_message_for_dom(message: str, is_locator_mode: bool = False) -
                 result["message"] = f"User Prompt & Distilled HTML Snippet:\n\n{distilled}"
             return result
 
-    # 2. If URLs are found, fetch and append
-    if urls:
+    # 2. If URLs are found AND we're in locator mode, fetch and append
+    if urls and is_locator_mode:
         appended_doms = []
         all_distilled = []
         for url in urls[:2]:

@@ -97,6 +97,30 @@ Share the generated URL (e.g., `https://my-qa-assistant.loca.lt`) with your team
 
 ---
 
+## Development Mode
+
+To run frontend and backend separately (hot-reload for both):
+
+```bash
+# Terminal 1 — Backend
+cd backend
+pip install -r requirements.txt
+python -m uvicorn server:app --reload --port 8000
+
+# Terminal 2 — Frontend (Vite dev server on :5173, proxies API to :8000)
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## Project Context
+
+See [`SKILL.md`](./SKILL.md) for a comprehensive context file describing the architecture, key files, features, and design decisions — useful for AI-assisted development or onboarding.
+
+---
+
 ## Developed By
 
 Designed and developed by **[Sanjay Krishna](https://in.linkedin.com/in/sanjay-krishna)**.
