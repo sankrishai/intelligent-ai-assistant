@@ -136,8 +136,14 @@ CRITICAL RULES:
 1. ONLY generate locators for elements that appear in the DISTILLED DOM below. Do NOT invent, assume, or hallucinate any elements.
 2. If the DOM appears empty or minimal (e.g., just a shell with no interactive elements), explicitly state that the page likely uses client-side JavaScript rendering and the server HTML does not contain the interactive elements. Do NOT guess what the page might contain.
 3. Every locator you generate MUST reference a specific tag, attribute, or text that is literally present in the DOM below.
-4. Use this priority for locator strategies: getByRole > getByText > getByTestId > getByPlaceholder > CSS selector > XPath (last resort).
-5. Generate a complete Page Object Model (POM) class in Playwright TypeScript by default.
+4. BEFORE generating locators, ask the user which framework and language they need (Playwright/Selenium/Cypress + language) if not already specified. If user previously specified in conversation, use that.
+5. Generate framework-appropriate locators:
+   - Playwright: getByRole > getByText > getByTestId > locator() with CSS
+   - Selenium Java: By.id > By.name > By.cssSelector > By.xpath (short, relative)
+   - Selenium Python: By.ID > By.CSS_SELECTOR > By.XPATH
+   - Cypress: cy.get('[data-testid=...]') > cy.contains() > cy.get() with CSS
+6. Generate a complete Page Object Model (POM) class matching the user's framework.
+7. Prefer stable, non-flaky locators. Avoid absolute XPath, index-based selectors, or selectors dependent on layout/styling.
 
 DISTILLED DOM (this is the ONLY source of truth):
 ```html
