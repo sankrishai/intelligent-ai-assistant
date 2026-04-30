@@ -58,37 +58,90 @@ def distill_html(html_snippet: str) -> str:
     distilled = re.sub(r'\n\s*\n', '\n', distilled)
     return distilled.strip()
 
-async def process_message_for_dom(message: str) -> str:
+async def process_message_for_dom(message: str, is_locator_mode: bool = False) -> dict:
     """
     Checks if the message contains a URL or raw HTML snippet.
     If it contains a URL, fetches it and appends the distilled DOM.
     If it contains HTML, it distills it in place.
+
+    Returns a dict with:
+      - message: the processed message string
+      - distilled_dom: the raw distilled DOM (for showing to user), or None
+      - source_url: the URL that was fetched, or None
+      - fetch_error: error message if fetch failed, or None
     """
     # 1. Check for URLs
     url_pattern = re.compile(r'https?://[^\s<>"]+|www\.[^\s<>"]+')
     urls = url_pattern.findall(message)
-    
-    processed_message = message
-    
+
+    result = {
+        "message": message,
+        "distilled_dom": None,
+        "source_url": None,
+        "fetch_error": None,
+    }
+
     # If the user pasted a raw HTML snippet directly in the prompt
     if "<div" in message or "<button" in message or "<a " in message or "<input" in message:
-        # We try to extract and distill the HTML part.
-        # For simplicity, if we detect HTML tags, we run the whole message through distill_html
-        # Note: This might strip non-HTML text if not careful, so we only distill if it looks heavily like HTML
-        # A safer approach: extract everything between < and > and assume it's a snippet.
-        # Actually, let's just let BeautifulSoup parse the whole text. It will preserve text nodes.
         distilled = distill_html(message)
         if len(distilled) > 10:
-            return f"User Prompt & Distilled HTML Snippet:\n\n{distilled}"
-    
+            result["distilled_dom"] = distilled
+            if is_locator_mode:
+                result["message"] = _build_grounded_locator_prompt(distilled, source="html_snippet")
+            else:
+                result["message"] = f"User Prompt & Distilled HTML Snippet:\n\n{distilled}"
+            return result
+
     # 2. If URLs are found, fetch and append
     if urls:
         appended_doms = []
-        for url in urls[:2]: # Max 2 URLs to prevent abuse/timeouts
+        all_distilled = []
+        for url in urls[:2]:
             distilled_dom = await fetch_and_distill_url(url)
+            result["source_url"] = url
+
+            if distilled_dom.startswith("[Failed"):
+                result["fetch_error"] = distilled_dom
+                continue
+
+            # Check if the distilled DOM is too thin (likely a JS-rendered SPA)
+            if len(distilled_dom.strip()) < 50:
+                result["fetch_error"] = f"[Warning] The page at {url} returned very little HTML. It may be a JavaScript-rendered SPA. The DOM shown below is from the initial server response only — actual interactive elements may not be present. Consider pasting the HTML source directly."
+
+            all_distilled.append(distilled_dom)
             appended_doms.append(f"\n--- Distilled DOM for {url} ---\n{distilled_dom}\n---------------------------")
-        
-        if appended_doms:
-            processed_message += "\n\n" + "\n".join(appended_doms)
-            
-    return processed_message
+
+        if all_distilled:
+            result["distilled_dom"] = "\n\n".join(all_distilled)
+
+        if is_locator_mode and all_distilled:
+            combined_dom = "\n\n".join(all_distilled)
+            result["message"] = _build_grounded_locator_prompt(combined_dom, source=urls[0])
+        elif appended_doms:
+            result["message"] = message + "\n\n" + "\n".join(appended_doms)
+
+    return result
+
+
+def _build_grounded_locator_prompt(distilled_dom: str, source: str = "") -> str:
+    """
+    Builds a strictly grounded prompt that forces the LLM to ONLY use
+    elements present in the distilled DOM. Prevents hallucination.
+    """
+    return f"""STRICT DOM LOCATOR GENERATION TASK
+
+SOURCE: {source}
+
+CRITICAL RULES:
+1. ONLY generate locators for elements that appear in the DISTILLED DOM below. Do NOT invent, assume, or hallucinate any elements.
+2. If the DOM appears empty or minimal (e.g., just a shell with no interactive elements), explicitly state that the page likely uses client-side JavaScript rendering and the server HTML does not contain the interactive elements. Do NOT guess what the page might contain.
+3. Every locator you generate MUST reference a specific tag, attribute, or text that is literally present in the DOM below.
+4. Use this priority for locator strategies: getByRole > getByText > getByTestId > getByPlaceholder > CSS selector > XPath (last resort).
+5. Generate a complete Page Object Model (POM) class in Playwright TypeScript by default.
+
+DISTILLED DOM (this is the ONLY source of truth):
+```html
+{distilled_dom}
+```
+
+Generate locators ONLY for elements found above. If an element is not in the DOM, do not create a locator for it."""

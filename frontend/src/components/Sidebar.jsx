@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { GeminiIcon, OpenAIIcon, ClaudeIcon, DeepSeekIcon, MistralIcon, KimiIcon, GroqIcon } from './ProviderIcons'
 import AiBrainIcon from './AiBrainIcon'
 
@@ -14,33 +14,30 @@ const PROVIDERS = [
 
 const PROVIDER_MODELS = {
     gemini: [
-        { id: 'gemini-3.1-pro', label: 'Gemini 3.1 Pro' },
-        { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite' },
         { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
         { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-        { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-        { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
-        { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+        { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite' },
+        { id: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro (Preview)' },
+        { id: 'gemini-3-flash-preview', label: 'Gemini 3 Flash (Preview)' },
     ],
     openai: [
-        { id: 'gpt-4.5-preview', label: 'GPT-4.5 Preview' },
-        { id: 'o1', label: 'o1' },
-        { id: 'o1-mini', label: 'o1-mini' },
-        { id: 'o3-mini', label: 'o3-mini' },
         { id: 'gpt-4o', label: 'GPT-4o' },
         { id: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-        { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+        { id: 'gpt-4.1', label: 'GPT-4.1' },
+        { id: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
+        { id: 'gpt-4.1-nano', label: 'GPT-4.1 Nano' },
+        { id: 'o4-mini', label: 'o4-mini' },
+        { id: 'o3', label: 'o3' },
+        { id: 'o3-mini', label: 'o3-mini' },
     ],
     claude: [
         { id: 'claude-opus-4-7', label: 'Claude Opus 4.7' },
-        { id: 'claude-sonnet-4-7', label: 'Claude Sonnet 4.7' },
-        { id: 'claude-opus-4-6', label: 'Claude Opus 4.6' },
         { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
-        { id: 'claude-haiku-4-6', label: 'Claude Haiku 4.6' },
+        { id: 'claude-opus-4-6', label: 'Claude Opus 4.6' },
+        { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5' },
+        { id: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5' },
         { id: 'claude-3-7-sonnet-20250219', label: 'Claude 3.7 Sonnet' },
         { id: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
-        { id: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
-        { id: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
     ],
     deepseek: [
         { id: 'deepseek-chat', label: 'DeepSeek V3' },
@@ -48,18 +45,21 @@ const PROVIDER_MODELS = {
     ],
     mistral: [
         { id: 'mistral-large-latest', label: 'Mistral Large' },
-        { id: 'mistral-medium-latest', label: 'Mistral Medium' },
         { id: 'mistral-small-latest', label: 'Mistral Small' },
         { id: 'codestral-latest', label: 'Codestral' },
+        { id: 'magistral-medium-2509', label: 'Magistral Medium' },
+        { id: 'magistral-small-2509', label: 'Magistral Small' },
+        { id: 'devstral-2512', label: 'Devstral' },
     ],
     kimi: [
+        { id: 'kimi-k2.6', label: 'Kimi K2.6' },
         { id: 'kimi-k2.5', label: 'Kimi K2.5' },
     ],
     groq: [
         { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B' },
         { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B' },
-        { id: 'deepseek-r1-distill-llama-70b', label: 'DeepSeek R1 Llama 70B' },
-        { id: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B' },
+        { id: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout 17B' },
+        { id: 'qwen/qwen3-32b', label: 'Qwen3 32B' },
         { id: 'gemma2-9b-it', label: 'Gemma 2 9B' },
     ],
 }
@@ -70,7 +70,7 @@ const API_KEY_LABELS = {
     claude: { label: 'Anthropic API Key', hint: 'Get from console.anthropic.com' },
     deepseek: { label: 'DeepSeek API Key', hint: 'Get from platform.deepseek.com' },
     mistral: { label: 'Mistral API Key', hint: 'Get from console.mistral.ai' },
-    kimi: { label: 'Kimi API Key', hint: 'Get from platform.moonshot.ai' },
+    kimi: { label: 'Kimi API Key', hint: 'Get from platform.kimi.ai' },
     groq: { label: 'Groq API Key', hint: 'Get from console.groq.com' },
 }
 
@@ -83,7 +83,7 @@ const CAPABILITIES = [
     { id: 'rovo', label: 'Rovo (JQL Search)', icon: '🤖', description: 'Search Jira via JQL' },
 ]
 
-function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, chatAction, setChatAction, atlassianConfig, setAtlassianConfig }) {
+function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, streamingEnabled, setStreamingEnabled, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, chatAction, setChatAction, atlassianConfig, setAtlassianConfig }) {
     const [showIntegrations, setShowIntegrations] = useState(false)
     const [showApiKey, setShowApiKey] = useState(false)
     const [configOpen, setConfigOpen] = useState(() => localStorage.getItem('sb_config') !== 'false')
@@ -103,7 +103,16 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
         setGeminiModel(e.target.value)
     }
 
-    const currentModel = geminiModel || (models[0]?.id || '')
+    // Validate stored model against current provider's model list
+    const isValidModel = models.some(m => m.id === geminiModel)
+    const currentModel = (isValidModel && geminiModel) || (models[0]?.id || '')
+
+    // Auto-correct stale model from localStorage
+    useEffect(() => {
+        if (!isValidModel && models.length > 0) {
+            setGeminiModel(models[0].id)
+        }
+    }, [provider, isValidModel, models, setGeminiModel])
 
     return (
         <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
@@ -158,7 +167,6 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                                     onChange={(e) => {
                                         const newProvider = e.target.value
                                         setProvider(newProvider)
-                                        setApiKey('')
                                         const newModels = PROVIDER_MODELS[newProvider] || []
                                         if (newModels.length > 0) {
                                             setGeminiModel(newModels[0].id)
@@ -236,6 +244,22 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                             <div className="slider-labels">
                                 <span>Precise</span>
                                 <span>Creative</span>
+                            </div>
+                        </div>
+
+                        {/* Streaming Toggle */}
+                        <div className="sidebar-section streaming-toggle-section">
+                            <div className="streaming-toggle-row">
+                                <span className="streaming-label">⚡ Streaming</span>
+                                <label className="toggle-switch">
+                                    <input
+                                        type="checkbox"
+                                        checked={streamingEnabled}
+                                        onChange={(e) => setStreamingEnabled(e.target.checked)}
+                                    />
+                                    <span className="toggle-slider"></span>
+                                </label>
+                                <span className="streaming-status">{streamingEnabled ? 'ON' : 'OFF'}</span>
                             </div>
                         </div>
                     </div>
@@ -335,17 +359,17 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                 </div>
 
                 <div className="sidebar-divider"></div>
+            </div>
 
-                {/* Actions */}
-                <div className="sidebar-section actions-section">
-                    <button className="action-btn export-btn" onClick={onExportChat} disabled={messageCount === 0}>
-                        📥 Export Chat
-                        {messageCount > 0 && <span className="msg-count">{messageCount}</span>}
-                    </button>
-                    <button className="action-btn clear-btn" onClick={onClearChat} disabled={messageCount === 0}>
-                        🗑️ Clear Chat
-                    </button>
-                </div>
+            {/* Actions — pinned above footer */}
+            <div className="sidebar-actions-pinned">
+                <button className="action-btn export-btn" onClick={onExportChat} disabled={messageCount === 0}>
+                    📥 Export Chat
+                    {messageCount > 0 && <span className="msg-count">{messageCount}</span>}
+                </button>
+                <button className="action-btn clear-btn" onClick={onClearChat} disabled={messageCount === 0}>
+                    🗑️ Clear Chat
+                </button>
             </div>
 
             <div className="sidebar-footer">

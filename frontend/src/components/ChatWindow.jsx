@@ -3,13 +3,13 @@ import MessageBubble from './MessageBubble'
 import AiBrainIcon from './AiBrainIcon'
 
 const SUGGESTIONS = [
-    { icon: '🎭', text: 'Generate Playwright or Selenium test scripts from my code' },
+    { icon: '🎭', text: 'Generate Playwright or Selenium test scripts and capture smart locators' },
     { icon: '🧪', text: 'Create unit test cases with edge cases and assertions' },
     { icon: '📋', text: 'Build a test plan with positive, negative and boundary scenarios' },
-    { icon: '🐛', text: 'Analyze my code for bugs and suggest fixes' }
+    { icon: '🐛', text: 'Analyze code for bugs and suggest fixes' }
 ]
 
-function ChatWindow({ messages, isLoading, onSend }) {
+function ChatWindow({ messages, isLoading, onSend, onRegenerate }) {
     const bottomRef = useRef(null)
 
     useEffect(() => {
@@ -32,11 +32,11 @@ function ChatWindow({ messages, isLoading, onSend }) {
                             <button
                                 key={i}
                                 className="suggestion-card"
-                                onClick={() => onSend(s.text)}
+                                onClick={() => onSend({ text: s.text, action: 'text', image: null })}
                             >
                                 <span className="suggestion-icon">{s.icon}</span>
                                 <span className="suggestion-text">{s.text}</span>
-                                <span className="suggestion-arrow">→</span>
+                                <span className="suggestion-arrow">&rarr;</span>
                             </button>
                         ))}
                     </div>
@@ -44,7 +44,17 @@ function ChatWindow({ messages, isLoading, onSend }) {
             )}
 
             {messages.map((msg, i) => (
-                <MessageBubble key={i} role={msg.role} content={msg.content} timestamp={msg.timestamp} />
+                <MessageBubble
+                    key={msg.id || i}
+                    role={msg.role}
+                    content={msg.content}
+                    timestamp={msg.timestamp}
+                    onRegenerate={
+                        msg.role === 'assistant' && i === messages.length - 1 && !isLoading
+                            ? () => onRegenerate(i)
+                            : null
+                    }
+                />
             ))}
 
             {isLoading && (

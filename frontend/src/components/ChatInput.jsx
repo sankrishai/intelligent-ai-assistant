@@ -9,6 +9,11 @@ function ChatInput({ onSend, isLoading, onStop, action, setAction }) {
     const handleImageUpload = (e) => {
         const file = e.target.files[0]
         if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size exceeds 10 MB limit. Please upload a smaller image.')
+                e.target.value = ''
+                return
+            }
             const reader = new FileReader()
             reader.onloadend = () => {
                 setImagePreview(reader.result)
@@ -61,7 +66,7 @@ function ChatInput({ onSend, isLoading, onStop, action, setAction }) {
         <form className="chat-input-container" onSubmit={handleSubmit} style={{ position: 'relative' }}>
             <div className="input-hint">
                 {imagePreview ? (
-                    <span style={{ color: 'var(--green-400)', fontWeight: '700', animation: 'pulse-green 2s infinite' }}>✨ Visual QA Mode Active (Screenshot Attached)</span>
+                    <span style={{ color: 'var(--green-400)', fontWeight: '700', animation: 'pulse-green 2s infinite' }}>Screenshot Attached</span>
                 ) : (
                     <span>Press <kbd>Enter</kbd> to send, <kbd>Shift+Enter</kbd> for new line.</span>
                 )}
@@ -88,7 +93,7 @@ function ChatInput({ onSend, isLoading, onStop, action, setAction }) {
                     <button 
                         type="button" 
                         onClick={() => fileInputRef.current?.click()} 
-                        title="Upload Screenshot for Visual QA"
+                        title="Upload Screenshot"
                         style={{ background: 'transparent', border: 'none', color: 'var(--text-3)', cursor: 'pointer', padding: '0.2rem', transition: 'color 0.2s' }}
                         onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary-400)'}
                         onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-3)'}
@@ -124,7 +129,7 @@ function ChatInput({ onSend, isLoading, onStop, action, setAction }) {
                                 action === 'image' ? "Describe the image to generate..." :
                                     action === 'jira' ? "Enter Jira Ticket ID (e.g. PROJ-123)..." :
                                         action === 'rovo' ? "Enter JQL Query (e.g. project=PROJ AND status='To Do')..." :
-                                            "Paste code, ask questions, or attach an image for Visual QA..."
+                                            "Paste code, ask questions, or attach an image..."
                     }
                     disabled={isLoading}
                     rows={1}

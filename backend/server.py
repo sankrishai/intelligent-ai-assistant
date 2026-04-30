@@ -5,12 +5,16 @@ os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
+import json
 from logic import (
     generate_tests_gemini, generate_tests_kimi,
     generate_tests_openai, generate_tests_claude, generate_tests_deepseek, generate_tests_mistral,
-    generate_tests_groq
+    generate_tests_groq,
+    stream_tests_gemini, stream_tests_openai, stream_tests_claude,
+    stream_tests_deepseek, stream_tests_mistral, stream_tests_groq, stream_tests_kimi
 )
 
 app = FastAPI(title="Intelligent QA Assistant API")
@@ -31,37 +35,100 @@ class GenerateRequest(BaseModel):
     temperature: float = 0.6
     model_name: str = ""
     image_data: Optional[str] = None
+    is_locator_mode: bool = False
+    conversation_history: Optional[list] = None
 
 class GenerateResponse(BaseModel):
     response: str
+    distilled_dom: Optional[str] = None
+    source_url: Optional[str] = None
+    dom_warning: Optional[str] = None
 
 from dom_distiller import process_message_for_dom
 
 @app.post("/api/generate", response_model=GenerateResponse)
 async def generate(req: GenerateRequest):
     model = req.model_name or ""
-    
+
     # Pre-process message for URLs or DOM snippets
-    processed_message = await process_message_for_dom(req.message)
+    dom_result = await process_message_for_dom(req.message, is_locator_mode=req.is_locator_mode)
+    processed_message = dom_result["message"]
+
+    # Build conversation history for context
+    history = req.conversation_history or []
 
     if req.provider == "gemini":
-        result = generate_tests_gemini(processed_message, req.api_key, model_name=model or "gemini-2.5-flash-lite", temperature=req.temperature, image_data=req.image_data)
+        result = generate_tests_gemini(processed_message, req.api_key, model_name=model or "gemini-2.5-flash", temperature=req.temperature, image_data=req.image_data, history=history)
     elif req.provider == "openai":
-        result = generate_tests_openai(processed_message, req.api_key, model_name=model or "gpt-4o", temperature=req.temperature, image_data=req.image_data)
+        result = generate_tests_openai(processed_message, req.api_key, model_name=model or "gpt-4o", temperature=req.temperature, image_data=req.image_data, history=history)
     elif req.provider == "claude":
-        result = generate_tests_claude(processed_message, req.api_key, model_name=model or "claude-sonnet-4-20250514", temperature=req.temperature, image_data=req.image_data)
+        result = generate_tests_claude(processed_message, req.api_key, model_name=model or "claude-opus-4-7", temperature=req.temperature, image_data=req.image_data, history=history)
     elif req.provider == "deepseek":
-        result = generate_tests_deepseek(processed_message, req.api_key, model_name=model or "deepseek-chat", temperature=req.temperature)
+        result = generate_tests_deepseek(processed_message, req.api_key, model_name=model or "deepseek-chat", temperature=req.temperature, history=history)
     elif req.provider == "mistral":
-        result = generate_tests_mistral(processed_message, req.api_key, model_name=model or "mistral-large-latest", temperature=req.temperature)
+        result = generate_tests_mistral(processed_message, req.api_key, model_name=model or "mistral-large-latest", temperature=req.temperature, history=history)
     elif req.provider == "kimi":
-        result = generate_tests_kimi(processed_message, req.api_key, temperature=req.temperature)
+        result = generate_tests_kimi(processed_message, req.api_key, model_name=model or "kimi-k2.6", temperature=req.temperature, history=history)
     elif req.provider == "groq":
-        result = generate_tests_groq(processed_message, req.api_key, model_name=model or "llama-3.3-70b-versatile", temperature=req.temperature)
+        result = generate_tests_groq(processed_message, req.api_key, model_name=model or "llama-3.3-70b-versatile", temperature=req.temperature, history=history)
     else:
         result = f"Unknown provider: {req.provider}"
-    
-    return GenerateResponse(response=result)
+
+    return GenerateResponse(
+        response=result,
+        distilled_dom=dom_result.get("distilled_dom"),
+        source_url=dom_result.get("source_url"),
+        dom_warning=dom_result.get("fetch_error"),
+    )
+
+
+@app.post("/api/stream")
+async def stream_generate(req: GenerateRequest):
+    """SSE streaming endpoint for real-time token delivery."""
+    model = req.model_name or ""
+
+    dom_result = await process_message_for_dom(req.message, is_locator_mode=req.is_locator_mode)
+    processed_message = dom_result["message"]
+    history = req.conversation_history or []
+
+    # Map provider to streaming function
+    stream_map = {
+        "gemini": lambda: stream_tests_gemini(processed_message, req.api_key, model_name=model or "gemini-2.5-flash", temperature=req.temperature, image_data=req.image_data, history=history),
+        "openai": lambda: stream_tests_openai(processed_message, req.api_key, model_name=model or "gpt-4o", temperature=req.temperature, image_data=req.image_data, history=history),
+        "claude": lambda: stream_tests_claude(processed_message, req.api_key, model_name=model or "claude-opus-4-7", temperature=req.temperature, image_data=req.image_data, history=history),
+        "deepseek": lambda: stream_tests_deepseek(processed_message, req.api_key, model_name=model or "deepseek-chat", temperature=req.temperature, history=history),
+        "mistral": lambda: stream_tests_mistral(processed_message, req.api_key, model_name=model or "mistral-large-latest", temperature=req.temperature, history=history),
+        "kimi": lambda: stream_tests_kimi(processed_message, req.api_key, model_name=model or "kimi-k2.6", temperature=req.temperature, history=history),
+        "groq": lambda: stream_tests_groq(processed_message, req.api_key, model_name=model or "llama-3.3-70b-versatile", temperature=req.temperature, history=history),
+    }
+
+    async def event_stream():
+        # Send DOM metadata first if present
+        meta = {}
+        if dom_result.get("distilled_dom"):
+            meta["distilled_dom"] = dom_result["distilled_dom"][:3000]
+        if dom_result.get("source_url"):
+            meta["source_url"] = dom_result["source_url"]
+        if dom_result.get("fetch_error"):
+            meta["dom_warning"] = dom_result["fetch_error"]
+        if meta:
+            yield f"data: {json.dumps({'type': 'meta', **meta})}\n\n"
+
+        if req.provider not in stream_map:
+            yield f"data: {json.dumps({'type': 'error', 'content': f'Unknown provider: {req.provider}'})}\n\n"
+            yield "data: [DONE]\n\n"
+            return
+
+        try:
+            stream_fn = stream_map[req.provider]
+            async for chunk in stream_fn():
+                yield f"data: {json.dumps({'type': 'token', 'content': chunk})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 @app.get("/api/health")
 async def health():

@@ -1,69 +1,71 @@
-# 🧠 Intelligent QA AI Assistant
+# Intelligent QA AI Assistant
 
-An enterprise-grade, localized, and cloud-connected AI assistant designed specifically for Software Quality Assurance (QA) and Full-Stack Testing tasks. The assistant helps developers and QA engineers quickly generate test cases, automate scripts (Selenium, Playwright, Cypress), review code for bugs, interact with Atlassian tracking software, generate images, search the web, and draft comprehensive test plans.
+An enterprise-grade AI assistant designed for Software Quality Assurance (QA) and Full-Stack Testing. Helps developers and QA engineers generate test cases, automate scripts (Selenium, Playwright, Cypress), review code, interact with Atlassian Jira, generate images, search the web, and draft comprehensive test plans.
 
 ![Intelligent QA AI Assistant](https://img.shields.io/badge/Status-Active-success)
 ![React](https://img.shields.io/badge/Frontend-React.js-61DAFB?logo=react)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)
 
-## ✨ Key Features
+## Key Features
 
-- **Domain-Specific AI:** Uses highly tailored System Prompts optimized for full-stack software development, advanced test automation (UI/API/Performance), CI/CD coverage analysis, and precise QA consulting.
-- **Strict Anti-Hallucination Guardrails:** The AI is strictly prompted to admit when it lacks information, demand clarification when a prompt is vague, and maintain a hyper-efficient, terse conversational style.
-- **Modern Enterprise UI:** A beautiful React-based frontend featuring light/dark mode, real-time backend connection status, dynamic dropdown menus, markdown rendering, API key visibility toggling, "New Chat" clearing, and in-progress request cancellation (`Stop` button).
-- **Multi-Provider Support:** Seamlessly switch between local offline inference models directly on your hardware and leading external cloud APIs.
-- **Multi-Tool Integration Interface:** Replace traditional chat with powerful discrete actions available via the input action selector:
-  - 💬 **Text / Code:** Standard chat and code generation.
-  - 📸 **Visual QA (Image Upload):** Attach screenshots of your application UI and have the AI instantly generate Playwright/Selenium automation scripts or report bugs directly from the image!
-  - 🌐 **Web Search:** Instantly fetch and summarize live data from the web using DuckDuckGo dynamically inside the answer prompt.
-  - 🎨 **Generate Image:** Prompt DALL-E 3 image generation right inside the chat window.
-  - 🤖 **Ask Rovo (Jira Search):** A lightweight agentic Rovo clone! Run JQL queries to search your entire Jira environment and have the AI synthesize the results instantly.
-  - 🔵 **Query Jira:** Easily pull a specific Jira ticket data directly into your AI context to generate immediate test steps based on bug reports or feature tickets.
-  - 🔍 **DOM Distiller (Auto-Locators):** Paste a URL or raw HTML snippet and the backend automatically fetches, cleans, and distills the DOM—removing noise and preserving only semantic/interactive elements—so the AI can perfectly generate Page Object Models and native locators for Playwright or Selenium.
+- **Domain-Specific AI:** Tailored system prompts optimized for full-stack software development, advanced test automation (UI/API/Performance), CI/CD coverage analysis, and QA consulting.
+- **Anti-Hallucination Guardrails:** The AI is prompted to admit when it lacks information, demand clarification on vague prompts, and maintain a concise conversational style.
+- **Streaming & Non-Streaming Modes:** Toggle between real-time SSE token streaming and single-response API calls via the sidebar.
+- **Per-Provider API Keys:** Each provider stores its own API key independently — switch providers without re-entering keys.
+- **Conversation History:** Last 10 messages are sent as context for multi-turn conversations.
+- **Modern UI:** React-based frontend with light/dark mode, real-time backend status, markdown rendering, code syntax highlighting, copy buttons, message regeneration, chat export, and request cancellation (Stop button).
+- **Multi-Provider Support:** Switch between 7 leading AI providers with provider-specific model selection.
+- **Image Upload:** Attach screenshots (up to 10 MB) to your message for AI analysis. Images are converted to base64 in-browser and sent inline — no files are stored on the server.
+- **Multi-Tool Actions** available via the input action selector:
+  - **Text / Code:** Standard chat and code generation.
+  - **DOM Locator Gen:** Paste a URL or raw HTML snippet — the backend fetches, cleans, and distills the DOM (removing scripts, styles, noise) to generate grounded Page Object Models and native locators for Playwright/Selenium. Works best with pasted HTML; URL fetching is limited for JS-rendered SPAs.
+  - **Web Search:** Fetch and summarize live web results via DuckDuckGo, integrated into the AI response.
+  - **Generate Image:** DALL-E 3 image generation directly in chat.
+  - **Query Jira:** Pull a specific Jira ticket into AI context for instant test step generation.
+  - **Rovo (JQL Search):** Run JQL queries to search your Jira environment and have the AI synthesize results.
 
-## 🔌 Supported AI Providers
+## Supported AI Providers
 
-The system supports the leading frontier models from multiple top-tier providers out-of-the-box:
+| Provider | Models | Vision Support |
+|----------|--------|----------------|
+| **Google Gemini** | gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-lite, gemini-3.1-pro-preview, gemini-3-flash-preview | Yes |
+| **OpenAI** | gpt-4o, gpt-4o-mini, gpt-4.1, gpt-4.1-mini, gpt-4.1-nano, o4-mini, o3, o3-mini | Yes |
+| **Anthropic Claude** | claude-opus-4-7, claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5, claude-sonnet-4-5, claude-3-7-sonnet, claude-3-5-sonnet | Yes |
+| **DeepSeek** | deepseek-chat (V3), deepseek-reasoner (R1) | No |
+| **Mistral AI** | mistral-large-latest, mistral-small-latest, codestral-latest, magistral-medium, magistral-small, devstral | No |
+| **Moonshot Kimi** | kimi-k2.6, kimi-k2.5 | No |
+| **Groq** | llama-3.3-70b-versatile, llama-3.1-8b-instant, llama-4-scout-17b, qwen3-32b, gemma2-9b-it | No |
 
-1. **Ollama (Local)** - Run models entirely local and privately (e.g., `llama3.2:3b`).
-2. **OpenAI** - Connect to the bleeding edge `gpt-4.5-preview`, `o1`, `gpt-4o`, `gpt-4-turbo`, and more. (Supports Visual QA)
-3. **Anthropic Claude** - Supports `claude-opus-4-7`, `claude-sonnet-4-7`, `claude-3-7-sonnet-20250219`, and more.
-4. **Google Gemini** - Leverage `gemini-3.1-pro`, `gemini-1.5-pro`, `gemini-2.0-flash`, and more.
-5. **Groq** - Extremely fast inference using `Llama-3.3-70B`, `DeepSeek R1 Llama 70B`, `Mixtral 8x7B`, etc.
-6. **DeepSeek** - High-reasoning chat with `deepseek-chat` and `deepseek-reasoner`.
-7. **Mistral AI** - Use powerful open weights like `mistral-large-latest` and `codestral-latest`.
-8. **Moonshot Kimi** - Connect to the highly capable `kimi-k2.5`.
+> Note: OpenAI reasoning models (o3, o3-mini, o4-mini) do not support custom temperature settings.
 
-## 🏗️ Architecture Stack
+## Architecture
 
-- **Frontend:** React.js, Vite, Vanilla CSS. Built into optimized, static production payloads.
-- **Backend:** Python, FastAPI, Uvicorn. Implements isolated controller logic for different APIs, tool use APIs (web search, Jira, Confluence, Image-gen), and a static directory mount capable of simultaneously serving the React UI natively alongside the API.
+- **Frontend:** React.js + Vite + Vanilla CSS. Builds to optimized static assets.
+- **Backend:** Python + FastAPI + Uvicorn. Handles AI provider routing, DOM distilling, Atlassian integration, web search, and serves the React UI as static files.
+- **SSL:** All backend HTTP clients use `verify=False` for corporate proxy/firewall compatibility.
 
 ---
 
-## 🚀 Setup & Installation (Single-Server Mode)
+## Setup & Installation
 
-The application has been unified so that the backend natively serves the compiled frontend. This removes CORS issues and exposes the entire application seamlessly on port `8000`.
+The backend natively serves the compiled frontend on port `8000`.
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18+)
 - [Python 3.9+](https://www.python.org/)
-- [Ollama](https://ollama.com/) (If using local offline inference)
 
 ### 1. Build the React Frontend
-Navigate to the frontend directory and build the static assets:
 ```bash
 cd frontend
 npm install
 npm run build
 ```
 
-### 2. Start the Unified Backend
-Navigate to the backend directory, install Python packages, and launch:
+### 2. Start the Backend
 ```bash
 cd ../backend
 
-# (Optional) Setup Virtual Environment
+# (Optional) Virtual Environment
 python3 -m venv venv
 source venv/bin/activate
 
@@ -75,26 +77,26 @@ python3 -m uvicorn server:app --reload --port 8000
 ```
 
 ### 3. Usage
-- Open a browser and navigate to **`http://localhost:8000`**.
-- Look for the **"API Connected"** status indicator.
-- Select your target AI Provider and provide API keys in the sidebar (for cloud models).
-- Add any needed credentials for Atlassian (Jira/Confluence) inside the sidebar if you intend to use those specific tools in the Chat Input dropdown.
+- Open **`http://localhost:8000`** in your browser.
+- Check for the **"Online"** status indicator in the sidebar.
+- Select your AI provider and enter the API key (saved per-provider in localStorage).
+- Configure Atlassian credentials (domain, email, API token) under Integrations if using Jira features.
+- Toggle streaming ON/OFF in the Configuration section.
 
 ---
 
-## 🌍 Exposing to the Public Internet (Cloudflare / Localtunnel)
+## Exposing to the Public Internet
 
-Since the entire application (Frontend UI + Backend API) has been fused securely onto Port `8000`, you can expose it globally to the internet securely without port-forwarding your router using `localtunnel`:
+Since the full app runs on port `8000`, you can expose it via localtunnel:
 
-1. Keep the python `uvicorn` server running on port `8000`.
-2. Open a new terminal and run:
-   ```bash
-   npx -y localtunnel --port 8000 --subdomain my-qa-assistant
-   ```
-3. Share the generated URL (e.g., `https://my-qa-assistant.loca.lt`) with your team! 
+```bash
+npx -y localtunnel --port 8000 --subdomain my-qa-assistant
+```
+
+Share the generated URL (e.g., `https://my-qa-assistant.loca.lt`) with your team.
 
 ---
 
-## 🤝 Developed By
+## Developed By
 
-Designed and Developed by **[Sanjay Krishna](https://in.linkedin.com/in/sanjay-krishna)**.
+Designed and developed by **[Sanjay Krishna](https://in.linkedin.com/in/sanjay-krishna)**.

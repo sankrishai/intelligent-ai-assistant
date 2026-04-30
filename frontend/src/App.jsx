@@ -17,7 +17,14 @@ function App() {
     }
   })
   const [provider, setProvider] = useState(() => localStorage.getItem('qa_provider') || 'gemini')
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('qa_apiKey') || '')
+  const [apiKeys, setApiKeys] = useState(() => {
+    try {
+      const saved = localStorage.getItem('qa_apiKeys')
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  })
   const [temperature, setTemperature] = useState(() => parseFloat(localStorage.getItem('qa_temperature')) || 0.6)
   const [geminiModel, setGeminiModel] = useState(() => localStorage.getItem('qa_model') || 'gemini-2.5-flash-lite')
   const [isLoading, setIsLoading] = useState(false)
@@ -25,6 +32,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [chatAction, setChatAction] = useState('text')
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+  const [streamingEnabled, setStreamingEnabled] = useState(() => localStorage.getItem('qa_streaming') !== 'false')
   const [atlassianConfig, setAtlassianConfig] = useState(() => {
     try {
       const saved = localStorage.getItem('atlassianConfig')
@@ -33,6 +41,12 @@ function App() {
       return { domain: '', email: '', token: '' }
     }
   })
+
+  // Derived apiKey for current provider
+  const apiKey = apiKeys[provider] || ''
+  const setApiKey = (key) => {
+    setApiKeys(prev => ({ ...prev, [provider]: key }))
+  }
 
   const abortControllerRef = useRef(null)
 
@@ -55,14 +69,17 @@ function App() {
     localStorage.setItem('qa_provider', provider)
   }, [provider])
   useEffect(() => {
-    localStorage.setItem('qa_apiKey', apiKey)
-  }, [apiKey])
+    localStorage.setItem('qa_apiKeys', JSON.stringify(apiKeys))
+  }, [apiKeys])
   useEffect(() => {
     localStorage.setItem('qa_temperature', temperature.toString())
   }, [temperature])
   useEffect(() => {
     localStorage.setItem('qa_model', geminiModel)
   }, [geminiModel])
+  useEffect(() => {
+    localStorage.setItem('qa_streaming', streamingEnabled.toString())
+  }, [streamingEnabled])
   useEffect(() => {
     localStorage.setItem('atlassianConfig', JSON.stringify(atlassianConfig))
   }, [atlassianConfig])
@@ -90,9 +107,9 @@ function App() {
     abortControllerRef.current = new AbortController()
     const { signal } = abortControllerRef.current
 
-    if (action === 'locator_gen') {
-      finalQuery = `You are a QA automation expert. Extract all interactive elements from the provided URL or DOM snippet. Generate native locators and a complete Page Object Model (POM) class. Default to Playwright (TypeScript) unless I specify Selenium or Cypress. Be comprehensive and use best-practice selector strategies.\n\nUser Input/DOM: ${text}`
-    } else if (action === 'jira' || action === 'rovo') {
+    const isLocatorMode = action === 'locator_gen'
+
+    if (action === 'jira' || action === 'rovo') {
       // Atlassian Fetch
       const idMatch = text.match(/^[^\s]+/)
       const id = idMatch ? idMatch[0] : ''
@@ -185,22 +202,107 @@ function App() {
         const assistantMsg = { role: 'assistant', content: data.response, timestamp: new Date() }
         setMessages(prev => [...prev, assistantMsg])
       } else {
-        const res = await fetch(`${API_URL}/api/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            provider,
-            message: finalQuery,
-            api_key: apiKey,
-            temperature,
-            model_name: geminiModel,
-            image_data: image
-          }),
-          signal
-        })
-        const data = await res.json()
-        const assistantMsg = { role: 'assistant', content: data.response, timestamp: new Date() }
-        setMessages(prev => [...prev, assistantMsg])
+        // Build conversation history (last 10 messages for context)
+        const conversationHistory = messages.slice(-10).map(m => ({
+          role: m.role,
+          content: m.content
+        }))
+
+        const requestBody = {
+          provider,
+          message: finalQuery,
+          api_key: apiKey,
+          temperature,
+          model_name: geminiModel,
+          image_data: image,
+          is_locator_mode: isLocatorMode,
+          conversation_history: conversationHistory
+        }
+
+        if (streamingEnabled) {
+          // SSE streaming — tokens appear progressively
+          const res = await fetch(`${API_URL}/api/stream`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+            signal
+          })
+
+          const reader = res.body.getReader()
+          const decoder = new TextDecoder()
+          let streamedContent = ''
+          let domMeta = {}
+
+          const streamMsgId = Date.now()
+          setMessages(prev => [...prev, { role: 'assistant', content: '', timestamp: new Date(), id: streamMsgId }])
+
+          let buffer = ''
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n')
+            buffer = lines.pop()
+
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue
+              const payload = line.slice(6).trim()
+              if (payload === '[DONE]') continue
+
+              try {
+                const event = JSON.parse(payload)
+                if (event.type === 'meta') {
+                  domMeta = event
+                } else if (event.type === 'token') {
+                  streamedContent += event.content
+                  setMessages(prev => prev.map(m =>
+                    m.id === streamMsgId ? { ...m, content: streamedContent } : m
+                  ))
+                } else if (event.type === 'error') {
+                  streamedContent += `\n\n❌ ${event.content}`
+                  setMessages(prev => prev.map(m =>
+                    m.id === streamMsgId ? { ...m, content: streamedContent } : m
+                  ))
+                }
+              } catch (e) {
+                // Skip malformed JSON
+              }
+            }
+          }
+
+          let finalContent = streamedContent
+          if (domMeta.dom_warning) {
+            finalContent = `> **DOM Fetch Warning:** ${domMeta.dom_warning}\n\n${finalContent}`
+          }
+          if (domMeta.distilled_dom && isLocatorMode) {
+            finalContent += `\n\n---\n<details><summary>Distilled DOM (what the AI analyzed)</summary>\n\n\`\`\`html\n${domMeta.distilled_dom.slice(0, 3000)}\n\`\`\`\n</details>`
+          }
+
+          setMessages(prev => prev.map(m =>
+            m.id === streamMsgId ? { ...m, content: finalContent } : m
+          ))
+        } else {
+          // Non-streaming — single API call, full response at once
+          const res = await fetch(`${API_URL}/api/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+            signal
+          })
+          const data = await res.json()
+
+          let finalContent = data.response
+          if (data.dom_warning) {
+            finalContent = `> **DOM Fetch Warning:** ${data.dom_warning}\n\n${finalContent}`
+          }
+          if (data.distilled_dom && isLocatorMode) {
+            finalContent += `\n\n---\n<details><summary>Distilled DOM (what the AI analyzed)</summary>\n\n\`\`\`html\n${data.distilled_dom.slice(0, 3000)}\n\`\`\`\n</details>`
+          }
+
+          const assistantMsg = { role: 'assistant', content: finalContent, timestamp: new Date() }
+          setMessages(prev => [...prev, assistantMsg])
+        }
       }
     } catch (err) {
       if (err.name === 'AbortError') return
@@ -213,11 +315,25 @@ function App() {
     } finally {
       setIsLoading(false)
     }
-  }, [provider, apiKey, temperature, geminiModel, isLoading])
+  }, [provider, apiKey, temperature, geminiModel, streamingEnabled, isLoading, messages])
 
   const handleClearChat = useCallback(() => {
     setMessages([])
   }, [])
+
+  const handleRegenerate = useCallback((assistantMsgIndex) => {
+    // Find the user message right before this assistant message
+    if (assistantMsgIndex < 1) return
+    const userMsg = messages[assistantMsgIndex - 1]
+    if (!userMsg || userMsg.role !== 'user') return
+
+    // Remove the assistant message being regenerated
+    setMessages(prev => prev.filter((_, i) => i !== assistantMsgIndex))
+
+    // Re-send the user's original message
+    const originalText = userMsg.content.replace('[Image Uploaded]\n', '')
+    handleSend({ text: originalText, action: chatAction, image: null })
+  }, [messages, handleSend, chatAction])
 
   const handleExportChat = useCallback(() => {
     if (messages.length === 0) return
@@ -239,6 +355,9 @@ function App() {
 
   return (
     <div className={`app-container ${theme}`}>
+      {sidebarOpen && window.innerWidth <= 768 && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
       <Sidebar
         provider={provider}
         setProvider={setProvider}
@@ -248,6 +367,8 @@ function App() {
         setTemperature={setTemperature}
         geminiModel={geminiModel}
         setGeminiModel={setGeminiModel}
+        streamingEnabled={streamingEnabled}
+        setStreamingEnabled={setStreamingEnabled}
         onClearChat={handleClearChat}
         onExportChat={handleExportChat}
         backendStatus={backendStatus}
@@ -289,6 +410,9 @@ function App() {
             </p>
           </div>
           <div className="header-right">
+            <span className="provider-badge" title={`Current: ${provider} / ${geminiModel}`}>
+              {provider.charAt(0).toUpperCase() + provider.slice(1)} &middot; {geminiModel.split('-').slice(-2).join('-')}
+            </span>
             <button
               onClick={handleClearChat}
               disabled={messages.length === 0}
@@ -301,7 +425,7 @@ function App() {
           </div>
         </header>
         <div className="header-divider"></div>
-        <ChatWindow messages={messages} isLoading={isLoading} onSend={handleSend} />
+        <ChatWindow messages={messages} isLoading={isLoading} onSend={handleSend} onRegenerate={handleRegenerate} />
         <ChatInput onSend={handleSend} isLoading={isLoading} onStop={handleStop} action={chatAction} setAction={setChatAction} />
       </main>
     </div>
