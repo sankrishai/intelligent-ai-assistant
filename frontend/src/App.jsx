@@ -116,6 +116,8 @@ function App() {
 
 To use local AI models, Ollama must be running on your machine.
 
+> ℹ️ **Note:** Ollama is local-only — not available on Vercel or hosted deployments.
+
 ---
 
 **macOS**

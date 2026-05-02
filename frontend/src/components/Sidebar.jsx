@@ -289,6 +289,11 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                                         <code>ollama serve</code>
                                     </div>
                                 )}
+
+                                <div className="ollama-local-note">
+                                    <span className="ollama-info-icon">ℹ</span>
+                                    <span>Local only — not available on hosted deployments</span>
+                                </div>
                             </div>
                         )}
 
