@@ -267,6 +267,37 @@ def generate_tests_groq(source_code: str, api_key: str, model_name: str = "llama
 
 
 # ═══════════════════════════════════════════
+#  OLLAMA (Local LLM)
+# ═══════════════════════════════════════════
+
+OLLAMA_BASE_URL = "http://localhost:11434"
+
+
+def get_ollama_models() -> list:
+    """Fetch list of installed models from local Ollama instance."""
+    try:
+        resp = _http_client.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=3)
+        resp.raise_for_status()
+        return [m["name"] for m in resp.json().get("models", [])]
+    except Exception:
+        return []
+
+
+def generate_tests_ollama(source_code: str, api_key: str = "", model_name: str = "llama3.2", temperature: float = 0.6, history: list = None, image_data: str = None) -> str:
+    """Generates tests using a local Ollama model (OpenAI-compatible)."""
+    try:
+        client = _openai_client(api_key="ollama", base_url=f"{OLLAMA_BASE_URL}/v1")
+        response = client.chat.completions.create(
+            model=model_name,
+            messages=_build_history_messages(history or [], SYSTEM_PROMPT, format_user_prompt(source_code)),
+            temperature=temperature
+        )
+        return _clean_response(response.choices[0].message.content)
+    except Exception as e:
+        return f"❌ Ollama Error: {str(e)}\n\n💡 Make sure Ollama is running: `ollama serve`"
+
+
+# ═══════════════════════════════════════════
 #  STREAMING FUNCTIONS (SSE)
 # ═══════════════════════════════════════════
 
@@ -466,3 +497,13 @@ async def stream_tests_groq(source_code: str, api_key: str, model_name: str = "l
             yield token
     except Exception as e:
         yield f"❌ Groq Error: {str(e)}"
+
+
+async def stream_tests_ollama(source_code: str, api_key: str = "", model_name: str = "llama3.2", temperature: float = 0.6, history: list = None):
+    try:
+        client = _openai_client(api_key="ollama", base_url=f"{OLLAMA_BASE_URL}/v1")
+        messages = _build_history_messages(history or [], SYSTEM_PROMPT, format_user_prompt(source_code))
+        async for token in _stream_openai_compatible(client, model_name, messages, temperature):
+            yield token
+    except Exception as e:
+        yield f"❌ Ollama Error: {str(e)}\n\n💡 Make sure Ollama is running: `ollama serve`"

@@ -14,9 +14,10 @@ import json
 from logic import (
     generate_tests_gemini, generate_tests_kimi,
     generate_tests_openai, generate_tests_claude, generate_tests_deepseek, generate_tests_mistral,
-    generate_tests_groq, generate_image_openai,
+    generate_tests_groq, generate_tests_ollama, generate_image_openai,
     stream_tests_gemini, stream_tests_openai, stream_tests_claude,
-    stream_tests_deepseek, stream_tests_mistral, stream_tests_groq, stream_tests_kimi
+    stream_tests_deepseek, stream_tests_mistral, stream_tests_groq, stream_tests_kimi,
+    stream_tests_ollama, get_ollama_models
 )
 from dom_distiller import process_message_for_dom
 from atlassian import get_jira_issue, get_confluence_page, search_jira_jql
@@ -102,6 +103,8 @@ async def generate(req: GenerateRequest):
         result = generate_tests_kimi(processed_message, req.api_key, model_name=model or "kimi-k2.6", temperature=req.temperature, history=history)
     elif req.provider == "groq":
         result = generate_tests_groq(processed_message, req.api_key, model_name=model or "llama-3.3-70b-versatile", temperature=req.temperature, history=history)
+    elif req.provider == "ollama":
+        result = generate_tests_ollama(processed_message, model_name=model or "llama3.2", temperature=req.temperature, history=history)
     else:
         result = f"Unknown provider: {req.provider}"
 
@@ -130,6 +133,7 @@ async def stream_generate(req: GenerateRequest):
         "mistral": lambda: stream_tests_mistral(processed_message, req.api_key, model_name=model or "mistral-large-latest", temperature=req.temperature, history=history),
         "kimi": lambda: stream_tests_kimi(processed_message, req.api_key, model_name=model or "kimi-k2.6", temperature=req.temperature, history=history),
         "groq": lambda: stream_tests_groq(processed_message, req.api_key, model_name=model or "llama-3.3-70b-versatile", temperature=req.temperature, history=history),
+        "ollama": lambda: stream_tests_ollama(processed_message, model_name=model or "llama3.2", temperature=req.temperature, history=history),
     }
 
     async def event_stream():
@@ -187,6 +191,13 @@ async def fetch_rovo(req: RovoRequest):
 async def fetch_web_search(req: WebSearchRequest):
     result = perform_web_search(req.query)
     return WebSearchResponse(content=result, error="[ERROR]" in result)
+
+
+@app.get("/api/ollama/models")
+async def ollama_models():
+    """Returns installed Ollama models and connection status."""
+    models = get_ollama_models()
+    return {"models": models, "connected": len(models) > 0}
 
 
 # --- Serve React Frontend ---

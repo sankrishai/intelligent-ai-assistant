@@ -14,7 +14,7 @@ An enterprise-grade AI assistant designed for Software Quality Assurance (QA) an
 - **Per-Provider API Keys:** Each provider stores its own API key independently — switch providers without re-entering keys.
 - **Conversation History:** Last 10 messages are sent as context for multi-turn conversations.
 - **Modern UI:** React-based frontend with light/dark mode, real-time backend status, markdown rendering, code syntax highlighting, copy buttons, message regeneration, chat export, and request cancellation (Stop button).
-- **Multi-Provider Support:** Switch between 7 leading AI providers with provider-specific model selection.
+- **Multi-Provider Support:** Switch between 8 AI providers — including local models via Ollama — with provider-specific model selection.
 - **Image Upload:** Attach screenshots (up to 10 MB) to your message for AI analysis. Images are converted to base64 in-browser and sent inline — no files are stored on the server.
 - **Multi-Tool Actions** available via the input action selector:
   - **Text / Code:** Standard chat and code generation.
@@ -35,8 +35,10 @@ An enterprise-grade AI assistant designed for Software Quality Assurance (QA) an
 | **Mistral AI** | mistral-large-latest, mistral-small-latest, codestral-latest, magistral-medium, magistral-small, devstral | No |
 | **Moonshot Kimi** | kimi-k2.6, kimi-k2.5 | No |
 | **Groq** | llama-3.3-70b-versatile, llama-3.1-8b-instant, llama-4-scout-17b, qwen3-32b, gemma2-9b-it | No |
+| **Ollama (Local)** | Any model installed locally (llama3.2, mistral, codellama, etc.) | No |
 
 > Note: OpenAI reasoning models (o3, o3-mini, o4-mini) do not support custom temperature settings.
+> Ollama requires a local Ollama install. Run `ollama serve` before use. No API key needed.
 
 ## Architecture
 
@@ -54,14 +56,36 @@ The backend natively serves the compiled frontend on port `8000`.
 - [Node.js](https://nodejs.org/) (v18+)
 - [Python 3.9+](https://www.python.org/)
 
-### 1. Build the React Frontend
+### Quick Start (Single Command)
+
+**Production** — builds frontend then serves everything on `:8000`:
+```bash
+npm install     # installs concurrently (one-time)
+npm start
+```
+
+**Dev mode** — hot-reload for both frontend (:5173) and backend (:8000):
+```bash
+npm run dev
+```
+
+Open **`http://localhost:8000`** (production) or **`http://localhost:5173`** (dev).
+
+> Both commands bind to `0.0.0.0` — accessible from other devices on the same network.
+> Find your machine's local IP (`ipconfig` on Windows, `ifconfig` on Mac/Linux) and open `http://<YOUR-IP>:8000` from any device on the same Wi-Fi.
+
+---
+
+### Manual Setup (step-by-step)
+
+#### 1. Build the React Frontend
 ```bash
 cd frontend
 npm install
 npm run build
 ```
 
-### 2. Start the Backend
+#### 2. Start the Backend
 ```bash
 cd ../backend
 
@@ -75,8 +99,6 @@ pip install -r requirements.txt
 # Start Server
 python3 -m uvicorn server:app --reload --port 8000
 ```
-
-### 3. Usage
 - Open **`http://localhost:8000`** in your browser.
 - Check for the **"Online"** status indicator in the sidebar.
 - Select your AI provider and enter the API key (saved per-provider in localStorage).
@@ -102,15 +124,10 @@ Share the generated URL (e.g., `https://my-qa-assistant.loca.lt`) with your team
 To run frontend and backend separately (hot-reload for both):
 
 ```bash
-# Terminal 1 — Backend
-cd backend
-pip install -r requirements.txt
-python -m uvicorn server:app --reload --port 8000
-
-# Terminal 2 — Frontend (Vite dev server on :5173, proxies API to :8000)
-cd frontend
-npm install
 npm run dev
+# or individually:
+npm run dev:backend   # backend only on :8000
+npm run dev:frontend  # frontend only on :5173
 ```
 
 ---

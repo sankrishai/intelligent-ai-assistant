@@ -10,6 +10,7 @@ const PROVIDERS = [
     { id: 'mistral', label: 'Mistral AI', icon: MistralIcon },
     { id: 'kimi', label: 'KimiCode', icon: KimiIcon },
     { id: 'groq', label: 'Groq', icon: GroqIcon },
+    { id: 'ollama', label: 'Ollama (Local)', icon: null },
 ]
 
 const PROVIDER_MODELS = {
@@ -62,6 +63,7 @@ const PROVIDER_MODELS = {
         { id: 'qwen/qwen3-32b', label: 'Qwen3 32B' },
         { id: 'gemma2-9b-it', label: 'Gemma 2 9B' },
     ],
+    ollama: [],  // dynamically loaded from /api/ollama/models
 }
 
 const API_KEY_LABELS = {
@@ -90,13 +92,43 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
     const [capsOpen, setCapsOpen] = useState(() => localStorage.getItem('sb_caps') !== 'false')
     const [integrationsOpen, setIntegrationsOpen] = useState(() => localStorage.getItem('sb_integrations') !== 'false')
 
+    // Ollama local LLM state
+    const [ollamaStatus, setOllamaStatus] = useState(null) // null | 'connected' | 'error'
+    const [ollamaModels, setOllamaModels] = useState([])
+    const [ollamaLoading, setOllamaLoading] = useState(false)
+
+    const fetchOllamaModels = async () => {
+        setOllamaLoading(true)
+        try {
+            const res = await fetch('/api/ollama/models')
+            const data = await res.json()
+            if (data.connected) {
+                setOllamaModels(data.models.map(m => ({ id: m, label: m })))
+                setOllamaStatus('connected')
+                if (data.models.length > 0) setGeminiModel(data.models[0])
+            } else {
+                setOllamaModels([])
+                setOllamaStatus('error')
+            }
+        } catch {
+            setOllamaModels([])
+            setOllamaStatus('error')
+        } finally {
+            setOllamaLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        if (provider === 'ollama') fetchOllamaModels()
+    }, [provider])
+
     const toggleConfig = () => { const v = !configOpen; setConfigOpen(v); localStorage.setItem('sb_config', v) }
     const toggleCaps = () => { const v = !capsOpen; setCapsOpen(v); localStorage.setItem('sb_caps', v) }
     const toggleIntegrations = () => { const v = !integrationsOpen; setIntegrationsOpen(v); localStorage.setItem('sb_integrations', v) }
 
     const activeProvider = PROVIDERS.find(p => p.id === provider)
-    const models = PROVIDER_MODELS[provider] || []
-    const apiKeyInfo = API_KEY_LABELS[provider]
+    const models = provider === 'ollama' ? ollamaModels : (PROVIDER_MODELS[provider] || [])
+    const apiKeyInfo = provider === 'ollama' ? null : API_KEY_LABELS[provider]
     const ActiveIcon = activeProvider?.icon
 
     const handleModelChange = (e) => {
@@ -156,11 +188,13 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                         <div className="sidebar-section">
                             <label className="section-label">Provider</label>
                             <div className="provider-dropdown-wrapper">
-                                {ActiveIcon && (
+                                {ActiveIcon ? (
                                     <span className="provider-dropdown-icon">
                                         <ActiveIcon size={20} />
                                     </span>
-                                )}
+                                ) : provider === 'ollama' ? (
+                                    <span className="provider-dropdown-icon" style={{ fontSize: '1.1rem' }}>🦙</span>
+                                ) : null}
                                 <select
                                     className="provider-dropdown"
                                     value={provider}
@@ -198,7 +232,7 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                             </div>
                         )}
 
-                        {/* API Key */}
+                        {/* API Key — hidden for Ollama */}
                         {apiKeyInfo && (
                             <div className="sidebar-section">
                                 <label className="section-label">🔑 {apiKeyInfo.label}</label>
@@ -223,6 +257,50 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                                     </div>
                                 </div>
                                 <span className="help-text">{apiKeyInfo.hint} • Auto-saved to browser</span>
+                            </div>
+                        )}
+
+                        {/* Ollama connection status panel */}
+                        {provider === 'ollama' && (
+                            <div className="sidebar-section ollama-status-panel">
+                                <div className="ollama-status-header">
+                                    <label className="section-label">🦙 Ollama Status</label>
+                                    <button
+                                        className="ollama-refresh-btn"
+                                        onClick={fetchOllamaModels}
+                                        disabled={ollamaLoading}
+                                        title="Refresh models"
+                                    >
+                                        <span className={ollamaLoading ? 'ollama-spin' : ''}>↻</span>
+                                        {ollamaLoading ? 'Checking' : 'Refresh'}
+                                    </button>
+                                </div>
+
+                                {ollamaStatus === null && (
+                                    <div className="ollama-status-row">
+                                        <span className="ollama-dot checking"></span>
+                                        <span className="ollama-status-text">Checking...</span>
+                                    </div>
+                                )}
+                                {ollamaStatus === 'connected' && (
+                                    <div className="ollama-status-row">
+                                        <span className="ollama-dot connected"></span>
+                                        <span className="ollama-status-text success">
+                                            Connected — {ollamaModels.length} model{ollamaModels.length !== 1 ? 's' : ''} available
+                                        </span>
+                                    </div>
+                                )}
+                                {ollamaStatus === 'error' && (
+                                    <>
+                                        <div className="ollama-status-row">
+                                            <span className="ollama-dot error"></span>
+                                            <span className="ollama-status-text error">Ollama not running</span>
+                                        </div>
+                                        <div className="ollama-cmd-hint">
+                                            <code>ollama serve</code>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
 

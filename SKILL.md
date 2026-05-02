@@ -2,7 +2,7 @@
 
 ## Overview
 A multi-provider AI assistant for Software QA and Test Automation. Built by Sanjay Krishna.
-React + Vite frontend, Python FastAPI backend, supports 7 AI providers with streaming and non-streaming modes.
+React + Vite frontend, Python FastAPI backend, supports 8 AI providers (including local Ollama) with streaming and non-streaming modes.
 
 ## Architecture
 
@@ -19,7 +19,7 @@ run.sh             Local dev startup script
 | File | Purpose |
 |------|---------|
 | `backend/server.py` | FastAPI app, CORS, all API endpoints, serves frontend static files |
-| `backend/logic.py` | AI provider integrations (generate + stream functions for all 7 providers) |
+| `backend/logic.py` | AI provider integrations (generate + stream functions for all 8 providers, including Ollama) |
 | `backend/templates.py` | System prompt (SYSTEM_PROMPT) and prompt formatting |
 | `backend/dom_distiller.py` | URL fetching + HTML distillation for locator generation |
 | `backend/atlassian.py` | Jira ticket fetch + JQL search (POST /rest/api/3/search/jql) |
@@ -46,6 +46,7 @@ run.sh             Local dev startup script
 | Mistral AI | api.mistral.ai/v1 (OpenAI-compatible) | No | |
 | Moonshot Kimi | api.moonshot.ai/v1 (OpenAI-compatible) | No | UTF-8 sanitization applied |
 | Groq | api.groq.com/openai/v1 (OpenAI-compatible) | No | Fast inference |
+| Ollama (Local) | localhost:11434/v1 (OpenAI-compatible) | No | No API key needed. Models fetched dynamically via /api/ollama/models |
 
 ## Features
 
@@ -86,6 +87,7 @@ run.sh             Local dev startup script
 | POST | `/api/atlassian/jira` | Fetch Jira ticket by ID |
 | POST | `/api/atlassian/rovo` | JQL search |
 | POST | `/api/web_search` | DuckDuckGo web search |
+| GET | `/api/ollama/models` | List installed Ollama models + connection status |
 | GET | `/api/health` | Backend health check |
 
 ## Deployment

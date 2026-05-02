@@ -9,3 +9,7 @@ venv/
 .tmp/
 .playwright-mcp/
 *.png
+
+# Root node_modules (concurrently)
+node_modules/
+package-lock.json

@@ -3,6 +3,13 @@
   "version": "1.0.0",
   "scripts": {
     "build": "cd frontend && npm install && npm run build",
-    "install": "cd frontend && npm install"
+    "install:deps": "cd frontend && npm install",
+    "start": "npm run build && cd backend && python -m uvicorn server:app --reload --port 8000 --host 0.0.0.0",
+    "dev": "concurrently \"cd backend && python -m uvicorn server:app --reload --port 8000 --host 0.0.0.0\" \"cd frontend && npm run dev\"",
+    "dev:backend": "cd backend && python -m uvicorn server:app --reload --port 8000",
+    "dev:frontend": "cd frontend && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }
