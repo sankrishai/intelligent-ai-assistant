@@ -22,6 +22,7 @@ const PROVIDER_MODELS = {
         { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite' },
         { id: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro (Preview)' },
         { id: 'gemini-3-flash-preview', label: 'Gemini 3 Flash (Preview)' },
+        { id: 'gemini-2.0-flash-preview-image-generation', label: 'Gemini Image Generation' },
     ],
     openai: [
         { id: 'gpt-4o', label: 'GPT-4o' },

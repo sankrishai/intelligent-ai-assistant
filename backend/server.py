@@ -14,7 +14,7 @@ import json
 from logic import (
     generate_tests_gemini, generate_tests_kimi,
     generate_tests_openai, generate_tests_claude, generate_tests_deepseek, generate_tests_mistral,
-    generate_tests_groq, generate_tests_ollama, generate_image_openai,
+    generate_tests_groq, generate_tests_ollama, generate_image_openai, generate_image_gemini,
     stream_tests_gemini, stream_tests_openai, stream_tests_claude,
     stream_tests_deepseek, stream_tests_mistral, stream_tests_groq, stream_tests_kimi,
     stream_tests_ollama, get_ollama_models
@@ -55,6 +55,8 @@ class GenerateResponse(BaseModel):
 class GenerateImageRequest(BaseModel):
     prompt: str
     api_key: str
+    provider: str = "openai"
+    model_name: str = ""
 
 class JiraRequest(BaseModel):
     domain: str
@@ -171,7 +173,10 @@ async def health():
 
 @app.post("/api/generate_image", response_model=GenerateResponse)
 async def generate_image(req: GenerateImageRequest):
-    result = generate_image_openai(req.prompt, req.api_key)
+    if req.provider == "gemini":
+        result = generate_image_gemini(req.prompt, req.api_key, model_name=req.model_name or "gemini-2.0-flash-preview-image-generation")
+    else:
+        result = generate_image_openai(req.prompt, req.api_key)
     return GenerateResponse(response=result)
 
 

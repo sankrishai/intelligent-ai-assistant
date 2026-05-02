@@ -222,12 +222,12 @@ Once running, click **↻ Refresh** in the sidebar to detect your models.`
     const userMsgContent = image ? `[Image Uploaded]\n${text}` : text
     const userMsg = { role: 'user', content: userMsgContent, timestamp: new Date() }
 
-    // Image generation is only supported by OpenAI (DALL-E 3)
-    if (action === 'image' && provider !== 'openai') {
+    // Image generation only supported by OpenAI (DALL-E 3) and Gemini (Imagen)
+    if (action === 'image' && !['openai', 'gemini'].includes(provider)) {
       const providerLabel = provider.charAt(0).toUpperCase() + provider.slice(1)
       const assistantMsg = {
         role: 'assistant',
-        content: `🎨 **Image Generation is not supported by ${providerLabel}.**\n\nImage generation uses **DALL-E 3**, which is only available via the **OpenAI** provider.\n\n**To generate images:**\n1. Switch to **OpenAI** in the sidebar\n2. Enter your OpenAI API key\n3. Select **Generate Image** and try again`,
+        content: `🎨 **Image Generation is not supported by ${providerLabel}.**\n\nImage generation is available with:\n- **OpenAI** — DALL-E 3\n- **Google Gemini** — Imagen (gemini-2.0-flash-preview-image-generation)\n\nSwitch to one of these providers in the sidebar and try again.`,
         timestamp: new Date()
       }
       setMessages(prev => [...prev, userMsg, assistantMsg])
@@ -244,7 +244,9 @@ Once running, click **↻ Refresh** in the sidebar to detect your models.`
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: text,
-            api_key: apiKey
+            api_key: apiKey,
+            provider,
+            model_name: geminiModel
           }),
           signal
         })

@@ -173,6 +173,29 @@ def generate_image_openai(prompt: str, api_key: str) -> str:
         return f"❌ Image Generation Error: {str(e)}"
 
 
+def generate_image_gemini(prompt: str, api_key: str, model_name: str = "gemini-2.0-flash-preview-image-generation") -> str:
+    """Generates an image via Gemini image generation models and returns inline base64 markdown."""
+    if not api_key:
+        return "⚠️ Please enter your Gemini API Key to generate images."
+    try:
+        import base64
+        from google.generativeai import types as gtypes
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(model_name)
+        response = model.generate_content(
+            prompt,
+            generation_config=gtypes.GenerationConfig(response_modalities=["IMAGE", "TEXT"])
+        )
+        for part in response.parts:
+            if hasattr(part, "inline_data") and part.inline_data:
+                img_b64 = base64.b64encode(part.inline_data.data).decode()
+                mime = part.inline_data.mime_type
+                return f"![Generated Image](data:{mime};base64,{img_b64})"
+        return "❌ Gemini returned no image. Try a different prompt or model."
+    except Exception as e:
+        return f"❌ Gemini Image Generation Error: {str(e)}"
+
+
 def generate_tests_claude(source_code: str, api_key: str, model_name: str = "claude-opus-4-7", temperature: float = 0.6, image_data: str = None, history: list = None) -> str:
     """Generates tests using Anthropic Claude API."""
     if not api_key:
