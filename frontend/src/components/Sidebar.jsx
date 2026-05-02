@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { GeminiIcon, OpenAIIcon, ClaudeIcon, DeepSeekIcon, MistralIcon, KimiIcon, GroqIcon } from './ProviderIcons'
 import AiBrainIcon from './AiBrainIcon'
 
+const API_URL = import.meta.env.DEV ? 'http://localhost:8000' : ''
+
 const PROVIDERS = [
     { id: 'gemini', label: 'Google Gemini', icon: GeminiIcon },
     { id: 'openai', label: 'OpenAI', icon: OpenAIIcon },
@@ -99,7 +101,7 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
     const fetchOllamaModels = async () => {
         setOllamaLoading(true)
         try {
-            const res = await fetch('/api/ollama/models')
+            const res = await fetch(`${API_URL}/api/ollama/models`)
             const data = await res.json()
             if (data.connected) {
                 setOllamaModels(data.models.map(m => ({ id: m, label: m })))
