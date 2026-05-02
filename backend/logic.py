@@ -294,7 +294,14 @@ def generate_tests_ollama(source_code: str, api_key: str = "", model_name: str =
         )
         return _clean_response(response.choices[0].message.content)
     except Exception as e:
-        return f"❌ Ollama Error: {str(e)}\n\n💡 Make sure Ollama is running: `ollama serve`"
+        return (
+            f"❌ **Ollama Error:** {str(e)}\n\n"
+            "**Ollama is not running or not installed.**\n\n"
+            "**macOS:**\n```bash\nbrew install ollama\nollama serve\n```\n\n"
+            "**Windows:** Download from [ollama.com/download](https://ollama.com/download), run the installer, then `ollama serve`\n\n"
+            f"**Pull a model:** `ollama pull {model_name}`\n\n"
+            "Then click **↻ Refresh** in the sidebar."
+        )
 
 
 # ═══════════════════════════════════════════
@@ -506,4 +513,11 @@ async def stream_tests_ollama(source_code: str, api_key: str = "", model_name: s
         async for token in _stream_openai_compatible(client, model_name, messages, temperature):
             yield token
     except Exception as e:
-        yield f"❌ Ollama Error: {str(e)}\n\n💡 Make sure Ollama is running: `ollama serve`"
+        yield (
+            f"❌ **Ollama Error:** {str(e)}\n\n"
+            "**Ollama is not running or not installed.**\n\n"
+            "**macOS:**\n```bash\nbrew install ollama\nollama serve\n```\n\n"
+            "**Windows:** Download from [ollama.com/download](https://ollama.com/download), run the installer, then `ollama serve`\n\n"
+            f"**Pull a model:** `ollama pull {model_name}`\n\n"
+            "Then click **↻ Refresh** in the sidebar."
+        )

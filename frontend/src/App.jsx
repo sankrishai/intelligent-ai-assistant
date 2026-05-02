@@ -41,6 +41,7 @@ function App() {
       return { domain: '', email: '', token: '' }
     }
   })
+  const [ollamaStatus, setOllamaStatus] = useState(null) // null | 'connected' | 'error'
 
   // Derived apiKey for current provider
   const apiKey = apiKeys[provider] || ''
@@ -108,6 +109,40 @@ function App() {
     const { signal } = abortControllerRef.current
 
     const isLocatorMode = action === 'locator_gen'
+
+    // Ollama not connected — show install guide in chat instead of calling the API
+    if (provider === 'ollama' && ollamaStatus !== 'connected') {
+      const guide = `🦙 **Ollama is not running or not installed.**
+
+To use local AI models, Ollama must be running on your machine.
+
+---
+
+**macOS**
+\`\`\`bash
+brew install ollama
+ollama serve
+\`\`\`
+
+**Windows**
+1. Download the installer from [ollama.com/download](https://ollama.com/download)
+2. Run the installer — Ollama starts automatically
+3. If not running, open Terminal and run: \`ollama serve\`
+
+---
+
+**Pull a model, then try again:**
+\`\`\`bash
+ollama pull llama3.2
+\`\`\`
+
+Once running, click **↻ Refresh** in the sidebar to detect your models.`
+
+      const userMsg = { role: 'user', content: text, timestamp: new Date() }
+      const assistantMsg = { role: 'assistant', content: guide, timestamp: new Date() }
+      setMessages(prev => [...prev, userMsg, assistantMsg])
+      return
+    }
 
     if (action === 'jira' || action === 'rovo') {
       // Atlassian Fetch
@@ -315,7 +350,7 @@ function App() {
     } finally {
       setIsLoading(false)
     }
-  }, [provider, apiKey, temperature, geminiModel, streamingEnabled, isLoading, messages])
+  }, [provider, apiKey, temperature, geminiModel, streamingEnabled, isLoading, messages, ollamaStatus])
 
   const handleClearChat = useCallback(() => {
     setMessages([])
@@ -381,6 +416,8 @@ function App() {
         setChatAction={setChatAction}
         atlassianConfig={atlassianConfig}
         setAtlassianConfig={setAtlassianConfig}
+        ollamaStatus={ollamaStatus}
+        setOllamaStatus={setOllamaStatus}
       />
       <main className="main-content">
         <header className="app-header">

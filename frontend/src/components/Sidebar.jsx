@@ -85,7 +85,7 @@ const CAPABILITIES = [
     { id: 'rovo', label: 'Rovo (JQL Search)', icon: '🤖', description: 'Search Jira via JQL' },
 ]
 
-function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, streamingEnabled, setStreamingEnabled, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, chatAction, setChatAction, atlassianConfig, setAtlassianConfig }) {
+function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTemperature, geminiModel, setGeminiModel, streamingEnabled, setStreamingEnabled, onClearChat, onExportChat, backendStatus, messageCount, isOpen, onToggle, theme, setTheme, chatAction, setChatAction, atlassianConfig, setAtlassianConfig, ollamaStatus, setOllamaStatus }) {
     const [showIntegrations, setShowIntegrations] = useState(false)
     const [showApiKey, setShowApiKey] = useState(false)
     const [configOpen, setConfigOpen] = useState(() => localStorage.getItem('sb_config') !== 'false')
@@ -93,7 +93,6 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
     const [integrationsOpen, setIntegrationsOpen] = useState(() => localStorage.getItem('sb_integrations') !== 'false')
 
     // Ollama local LLM state
-    const [ollamaStatus, setOllamaStatus] = useState(null) // null | 'connected' | 'error'
     const [ollamaModels, setOllamaModels] = useState([])
     const [ollamaLoading, setOllamaLoading] = useState(false)
 
