@@ -221,6 +221,19 @@ Once running, click **↻ Refresh** in the sidebar to detect your models.`
 
     const userMsgContent = image ? `[Image Uploaded]\n${text}` : text
     const userMsg = { role: 'user', content: userMsgContent, timestamp: new Date() }
+
+    // Image generation is only supported by OpenAI (DALL-E 3)
+    if (action === 'image' && provider !== 'openai') {
+      const providerLabel = provider.charAt(0).toUpperCase() + provider.slice(1)
+      const assistantMsg = {
+        role: 'assistant',
+        content: `🎨 **Image Generation is not supported by ${providerLabel}.**\n\nImage generation uses **DALL-E 3**, which is only available via the **OpenAI** provider.\n\n**To generate images:**\n1. Switch to **OpenAI** in the sidebar\n2. Enter your OpenAI API key\n3. Select **Generate Image** and try again`,
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, userMsg, assistantMsg])
+      return
+    }
+
     setMessages(prev => [...prev, userMsg])
     setIsLoading(true)
 
