@@ -262,43 +262,32 @@ function Sidebar({ provider, setProvider, apiKey, setApiKey, temperature, setTem
                         {/* Ollama connection status panel */}
                         {provider === 'ollama' && (
                             <div className="sidebar-section ollama-status-panel">
-                                <div className="ollama-status-header">
-                                    <label className="section-label">🦙 Ollama Status</label>
+                                <div className="ollama-status-row">
+                                    <label className="section-label" style={{ marginBottom: 0 }}>🦙 Ollama</label>
+                                    <span className="ollama-dot-inline">
+                                        <span className={`ollama-dot ${ollamaStatus === 'connected' ? 'connected' : ollamaStatus === 'error' ? 'error' : 'checking'}`}></span>
+                                        <span className={`ollama-status-text ${ollamaStatus === 'connected' ? 'success' : ollamaStatus === 'error' ? 'error' : ''}`}>
+                                            {ollamaStatus === 'connected'
+                                                ? `Connected (${ollamaModels.length})`
+                                                : ollamaStatus === 'error'
+                                                ? 'Not connected'
+                                                : 'Checking...'}
+                                        </span>
+                                    </span>
                                     <button
                                         className="ollama-refresh-btn"
                                         onClick={fetchOllamaModels}
                                         disabled={ollamaLoading}
-                                        title="Refresh models"
+                                        title="Refresh"
                                     >
                                         <span className={ollamaLoading ? 'ollama-spin' : ''}>↻</span>
-                                        {ollamaLoading ? 'Checking' : 'Refresh'}
                                     </button>
                                 </div>
 
-                                {ollamaStatus === null && (
-                                    <div className="ollama-status-row">
-                                        <span className="ollama-dot checking"></span>
-                                        <span className="ollama-status-text">Checking...</span>
-                                    </div>
-                                )}
-                                {ollamaStatus === 'connected' && (
-                                    <div className="ollama-status-row">
-                                        <span className="ollama-dot connected"></span>
-                                        <span className="ollama-status-text success">
-                                            Connected — {ollamaModels.length} model{ollamaModels.length !== 1 ? 's' : ''} available
-                                        </span>
-                                    </div>
-                                )}
                                 {ollamaStatus === 'error' && (
-                                    <>
-                                        <div className="ollama-status-row">
-                                            <span className="ollama-dot error"></span>
-                                            <span className="ollama-status-text error">Ollama not running</span>
-                                        </div>
-                                        <div className="ollama-cmd-hint">
-                                            <code>ollama serve</code>
-                                        </div>
-                                    </>
+                                    <div className="ollama-cmd-hint">
+                                        <code>ollama serve</code>
+                                    </div>
                                 )}
                             </div>
                         )}

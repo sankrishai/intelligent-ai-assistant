@@ -57,7 +57,7 @@ function ChatWindow({ messages, isLoading, onSend, onRegenerate }) {
                 />
             ))}
 
-            {isLoading && (
+            {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
                 <div className="loading-row">
                     <div className="avatar assistant-avatar">🤖</div>
                     <div className="loading-bubble">

@@ -810,25 +810,30 @@ body,
 .ollama-status-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-.ollama-status-header {
+.ollama-status-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
 }
 
-.ollama-status-header .section-label {
-  margin-bottom: 0;
+.ollama-dot-inline {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
 }
 
 .ollama-refresh-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.7rem;
-  padding: 3px 10px;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  font-size: 0.85rem;
   cursor: pointer;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-1);
@@ -836,6 +841,7 @@ body,
   color: var(--text-2);
   transition: var(--transition);
   font-family: inherit;
+  padding: 0;
 }
 
 .ollama-refresh-btn:hover:not(:disabled) {
@@ -858,25 +864,19 @@ body,
   to { transform: rotate(360deg); }
 }
 
-.ollama-status-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .ollama-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.ollama-dot.connected { background: #22c55e; box-shadow: 0 0 6px rgba(34, 197, 94, 0.5); }
-.ollama-dot.error     { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.4); }
+.ollama-dot.connected { background: #22c55e; box-shadow: 0 0 5px rgba(34, 197, 94, 0.5); }
+.ollama-dot.error     { background: #ef4444; box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); }
 .ollama-dot.checking  { background: var(--text-3, #94a3b8); }
 
 .ollama-status-text {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-2);
 }
 
@@ -2073,7 +2073,19 @@ body,
   }
 
   .header-right {
+    padding: 0.2rem 0.4rem;
+    gap: 0.3rem;
+    background: transparent;
+    border: none;
+  }
+
+  .header-right .provider-badge {
     display: none;
+  }
+
+  .header-right .clear-btn {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
   }
 
   .action-selector-wrapper {
